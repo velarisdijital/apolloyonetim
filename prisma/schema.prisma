@@ -1,0 +1,392 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  MASTER_ADMIN
+  KAPICI
+  DENETCI
+  EV_SAHIBI
+  KIRACI
+}
+
+enum OdemeDurumu {
+  ODENMEDI
+  ODENDI
+  GECIKTI
+  KISMI
+  ONAY_BEKLIYOR
+}
+
+enum GiderKategorisi {
+  ELEKTRIK
+  SU
+  DOGALGAZ
+  TEMIZLIK
+  BAKIM
+  TAMIRAT
+  ASANSOR
+  SIGORTA
+  PERSONEL
+  DIGER
+}
+
+enum OylamaDurumu {
+  AKTIF
+  TAMAMLANDI
+  IPTAL
+}
+
+enum ArizaDurumu {
+  BEKLEMEDE
+  INCELENIYOR
+  TAMAMLANDI
+}
+
+enum OnayDurumu {
+  BEKLEMEDE
+  ONAYLANDI
+  REDDEDILDI
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  ad            String
+  soyad         String
+  telefon       String?
+  rol           Role      @default(EV_SAHIBI)
+  aktif         Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  buildingId    String?
+  building      Building?       @relation(fields: [buildingId], references: [id])
+  apartmentId   String?
+  apartment     Apartment?      @relation(fields: [apartmentId], references: [id])
+
+  expenses      Expense[]       @relation("ExpenseCreator")
+  approvedExpenses Expense[]    @relation("ExpenseApprover")
+  payments          Payment[]
+  approvedPayments  Payment[]       @relation("PaymentApprover")
+  votes             Vote[]
+  notifications Notification[]
+  meetings      Meeting[]       @relation("MeetingCreator")
+  announcements Announcement[]
+  reservations  Reservation[]
+  arizaBildirimleri ArizaBildirimi[]
+  binaKurallari     BinaKurali[]
+  sentMessages      ChatMessage[]     @relation("MessageSender")
+  chatRoomMembers   ChatRoomMember[]
+
+  @@index([buildingId])
+  @@index([email])
+}
+
+model Building {
+  id          String   @id @default(cuid())
+  ad          String
+  adres       String
+  sehir       String
+  katSayisi   Int
+  daireSayisi Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  apartments    Apartment[]
+  users         User[]
+  expenses      Expense[]
+  dues          Dues[]
+  meetings      Meeting[]
+  polls         Poll[]
+  announcements Announcement[]
+  reservations  Reservation[]
+  arizaBildirimleri ArizaBildirimi[]
+  binaKurallari BinaKurali[]
+  chatRooms     ChatRoom[]
+}
+
+model Apartment {
+  id          String   @id @default(cuid())
+  no          String
+  kat         Int
+  metrekare   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building   @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  residents   User[]
+  payments    Payment[]
+  duesItems   DuesItem[]
+
+  @@unique([buildingId, no])
+  @@index([buildingId])
+}
+
+model Expense {
+  id          String            @id @default(cuid())
+  aciklama    String
+  tutar       Decimal           @db.Decimal(10, 2)
+  kategori    GiderKategorisi
+  tarih       DateTime
+  fisYolu     String?
+  fisAdi      String?
+  onayDurumu  OnayDurumu        @default(BEKLEMEDE)
+  onayNotu    String?
+  onaylayanId String?
+  onaylayan   User?             @relation("ExpenseApprover", fields: [onaylayanId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User      @relation("ExpenseCreator", fields: [createdById], references: [id])
+
+  @@index([buildingId, tarih])
+  @@index([kategori])
+  @@index([onayDurumu])
+}
+
+model Dues {
+  id              String   @id @default(cuid())
+  ay              Int
+  yil             Int
+  tutarKisi       Decimal  @db.Decimal(10, 2)
+  aciklama        String?
+  sonOdemeTarihi  DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buildingId  String
+  building    Building   @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  items       DuesItem[]
+
+  @@unique([buildingId, ay, yil])
+  @@index([buildingId])
+}
+
+model DuesItem {
+  id          String       @id @default(cuid())
+  durum       OdemeDurumu  @default(ODENMEDI)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  duesId      String
+  dues        Dues         @relation(fields: [duesId], references: [id], onDelete: Cascade)
+  apartmentId String
+  apartment   Apartment    @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+
+  @@unique([duesId, apartmentId])
+}
+
+model Payment {
+  id           String      @id @default(cuid())
+  tutar        Decimal     @db.Decimal(10, 2)
+  tarih        DateTime    @default(now())
+  aciklama     String?
+  makbuzYolu   String?
+  dekontYolu   String?
+  dekontAdi    String?
+  onayDurumu   OnayDurumu  @default(BEKLEMEDE)
+  onayNotu     String?
+  onaylayanId  String?
+  onaylayan    User?       @relation("PaymentApprover", fields: [onaylayanId], references: [id])
+  createdAt    DateTime    @default(now())
+
+  duesItemId  String
+  duesItem    DuesItem   @relation(fields: [duesItemId], references: [id])
+  apartmentId String
+  apartment   Apartment  @relation(fields: [apartmentId], references: [id])
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@index([apartmentId])
+  @@index([duesItemId])
+  @@index([onayDurumu])
+}
+
+model Meeting {
+  id           String   @id @default(cuid())
+  baslik       String
+  tarih        DateTime
+  icerik       String   @db.Text
+  katilimcilar String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation("MeetingCreator", fields: [createdById], references: [id])
+
+  @@index([buildingId, tarih])
+}
+
+model Poll {
+  id          String        @id @default(cuid())
+  soru        String
+  secenekler  String        @db.Text
+  durum       OylamaDurumu  @default(AKTIF)
+  bitisTarihi DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+
+  @@index([buildingId])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  secenek   Int
+  createdAt DateTime @default(now())
+
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  baslik    String
+  mesaj     String
+  okundu    Boolean  @default(false)
+  tip       String
+  link      String?
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, okundu])
+  @@index([createdAt])
+}
+
+model Reservation {
+  id              String   @id @default(cuid())
+  tarih           DateTime @db.Date
+  baslangicSaati  Int
+  bitisSaati      Int
+  aciklama        String?
+  createdAt       DateTime @default(now())
+
+  buildingId      String
+  building        Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([buildingId, tarih])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  baslik    String
+  icerik    String   @db.Text
+  onemli    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([buildingId, createdAt])
+}
+
+model ArizaBildirimi {
+  id          String       @id @default(cuid())
+  baslik      String
+  aciklama    String       @db.Text
+  konum       String       // e.g. "3. Kat Merdiven", "Otopark"
+  durum       ArizaDurumu  @default(BEKLEMEDE)
+  yanit       String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  buildingId  String
+  building    Building     @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+
+  @@index([buildingId, durum])
+}
+
+model BinaKurali {
+  id          String   @id @default(cuid())
+  baslik      String
+  icerik      String   @db.Text
+  kategori    String   @default("GENEL")
+  sira        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([buildingId, sira])
+}
+
+enum ChatRoomTipi {
+  GENEL
+  YONETIM
+  OZEL
+}
+
+model ChatRoom {
+  id          String       @id @default(cuid())
+  ad          String
+  tip         ChatRoomTipi @default(GENEL)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  buildingId  String
+  building    Building         @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+  members     ChatRoomMember[]
+
+  @@index([buildingId, tip])
+}
+
+model ChatRoomMember {
+  id          String   @id @default(cuid())
+  sonOkunma   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  chatRoomId  String
+  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  icerik      String   @db.Text
+  createdAt   DateTime @default(now())
+
+  chatRoomId  String
+  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([chatRoomId, createdAt])
+}

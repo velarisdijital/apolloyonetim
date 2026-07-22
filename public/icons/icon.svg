@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#2563eb"/>
+  <g transform="translate(96, 80)">
+    <!-- Building -->
+    <rect x="40" y="60" width="240" height="280" rx="12" fill="white" opacity="0.95"/>
+    <rect x="70" y="90" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="140" y="90" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="210" y="90" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="70" y="150" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="140" y="150" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="210" y="150" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="70" y="210" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="140" y="210" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <rect x="210" y="210" width="50" height="40" rx="6" fill="#2563eb" opacity="0.3"/>
+    <!-- Door -->
+    <rect x="130" y="280" width="60" height="60" rx="8" fill="#2563eb" opacity="0.5"/>
+    <!-- Roof -->
+    <polygon points="160,10 20,60 300,60" fill="white" opacity="0.9"/>
+  </g>
+</svg>
