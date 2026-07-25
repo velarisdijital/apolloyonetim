@@ -1,7 +1,36 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/mobile-auth";
+
+export async function GET(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      ad: true,
+      soyad: true,
+      telefon: true,
+      rol: true,
+      locale: true,
+      buildingId: true,
+      apartmentId: true,
+    },
+  });
+
+  if (!dbUser) {
+    return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
+  }
+
+  return NextResponse.json(dbUser);
+}
 
 export async function PUT(req: Request) {
   try {
