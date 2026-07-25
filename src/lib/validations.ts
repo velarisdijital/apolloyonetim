@@ -54,15 +54,19 @@ export const duyuruSchema = z.object({
 
 export const rezervasyonSchema = z.object({
   tarih: z.string().min(1, "Tarih gereklidir"),
-  baslangicSaati: z.number().min(0).max(21),
-  bitisSaati: z.number().min(1).max(22),
+  baslangicSaati: z.number().min(0).max(23),
+  bitisSaati: z.number().min(1).max(24),
   aciklama: z.string().optional(),
+  ortakAlanId: z.string().optional(),
 });
 
 export const arizaSchema = z.object({
   baslik: z.string().min(1, "Başlık gereklidir"),
   aciklama: z.string().min(1, "Açıklama gereklidir"),
   konum: z.string().min(1, "Konum gereklidir"),
+  oncelik: z.enum(["DUSUK", "NORMAL", "YUKSEK", "ACIL"]).optional(),
+  fotograflar: z.array(z.string()).optional(),
+  tahminiMaliyet: z.number().positive().optional(),
 });
 
 export const kullaniciSchema = z.object({

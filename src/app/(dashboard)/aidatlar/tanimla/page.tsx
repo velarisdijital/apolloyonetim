@@ -6,14 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Wallet } from "lucide-react";
 import Link from "next/link";
-
-const AY_ISIMLERI = [
-  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
-];
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function AidatTanimlaPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [ay, setAy] = useState(new Date().getMonth() + 1);
   const [yil, setYil] = useState(new Date().getFullYear());
   const [tutarKisi, setTutarKisi] = useState("");
@@ -22,10 +19,15 @@ export default function AidatTanimlaPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const ayIsimleri = [
+    t.months[1], t.months[2], t.months[3], t.months[4], t.months[5], t.months[6],
+    t.months[7], t.months[8], t.months[9], t.months[10], t.months[11], t.months[12],
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tutarKisi || !sonOdemeTarihi) {
-      setError("Tutar ve son ödeme tarihi gereklidir");
+      setError(t.common.required);
       return;
     }
 
@@ -48,16 +50,16 @@ export default function AidatTanimlaPage() {
       if (!res.ok) {
         const data = await res.json();
         if (data.errors) {
-          setError("Doğrulama hatası. Lütfen alanları kontrol edin.");
+          setError(t.errors.generic);
         } else {
-          setError(data.error || "Bir hata oluştu");
+          setError(data.error || t.errors.generic);
         }
         return;
       }
 
       router.push("/aidatlar");
     } catch {
-      setError("Bir hata oluştu");
+      setError(t.errors.generic);
     } finally {
       setSubmitting(false);
     }
@@ -72,9 +74,9 @@ export default function AidatTanimlaPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Yeni Aidat Tanımla</h1>
+          <h1 className="text-2xl font-bold">{t.dues.defineNew}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Tüm dairelere otomatik atanır
+            {t.dues.allApartments}
           </p>
         </div>
       </div>
@@ -83,26 +85,26 @@ export default function AidatTanimlaPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Wallet className="w-5 h-5 text-blue-600" />
-            Aidat Bilgileri
+            {t.dues.title}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Ay</label>
+                <label className="block text-sm font-medium mb-1">{t.common.date}</label>
                 <select
                   value={ay}
                   onChange={(e) => setAy(parseInt(e.target.value))}
                   className="w-full border dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
                 >
-                  {AY_ISIMLERI.map((ayAdi, i) => (
+                  {ayIsimleri.map((ayAdi, i) => (
                     <option key={i} value={i + 1}>{ayAdi}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Yıl</label>
+                <label className="block text-sm font-medium mb-1">{t.reports.title}</label>
                 <input
                   type="number"
                   value={yil}
@@ -115,7 +117,7 @@ export default function AidatTanimlaPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Kişi Başı Tutar (₺)</label>
+              <label className="block text-sm font-medium mb-1">{t.dues.perPerson} (₺)</label>
               <input
                 type="number"
                 value={tutarKisi}
@@ -127,7 +129,7 @@ export default function AidatTanimlaPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Son Ödeme Tarihi</label>
+              <label className="block text-sm font-medium mb-1">{t.dues.deadline}</label>
               <input
                 type="date"
                 value={sonOdemeTarihi}
@@ -137,13 +139,13 @@ export default function AidatTanimlaPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Açıklama (Opsiyonel)</label>
+              <label className="block text-sm font-medium mb-1">{t.common.description} ({t.common.optional})</label>
               <textarea
                 value={aciklama}
                 onChange={(e) => setAciklama(e.target.value)}
                 className="w-full border dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-transparent focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 rows={2}
-                placeholder="Aidat ile ilgili not..."
+                placeholder={t.dues.paymentNote}
               />
             </div>
 
@@ -154,7 +156,7 @@ export default function AidatTanimlaPage() {
             )}
 
             <Button type="submit" disabled={submitting} className="w-full">
-              {submitting ? "Tanımlanıyor..." : "Aidat Tanımla"}
+              {submitting ? t.common.processing : t.dues.defineNew}
             </Button>
           </form>
         </CardContent>

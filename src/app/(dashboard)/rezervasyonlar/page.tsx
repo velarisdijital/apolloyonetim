@@ -29,6 +29,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface Reservation {
   id: string;
@@ -39,12 +40,6 @@ interface Reservation {
   userId: string;
   user: { id: string; ad: string; soyad: string };
 }
-
-const GUN_ADLARI = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-const AY_ADLARI = [
-  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
-];
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -61,6 +56,13 @@ function formatDateKey(year: number, month: number, day: number) {
 
 export default function RezervasyonlarPage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
+
+  const GUN_ADLARI = [t.days.mon, t.days.tue, t.days.wed, t.days.thu, t.days.fri, t.days.sat, t.days.sun];
+  const AY_ADLARI = [
+    t.months[1], t.months[2], t.months[3], t.months[4], t.months[5], t.months[6],
+    t.months[7], t.months[8], t.months[9], t.months[10], t.months[11], t.months[12],
+  ];
   const now = new Date();
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
@@ -149,7 +151,7 @@ export default function RezervasyonlarPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Rezervasyon oluşturulamadı");
+        throw new Error(data.error || t.errors.generic);
       }
 
       setDialogOpen(false);
@@ -158,7 +160,7 @@ export default function RezervasyonlarPage() {
       setSure("2");
       await fetchReservations();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu");
+      setError(err instanceof Error ? err.message : t.errors.generic);
     } finally {
       setSubmitting(false);
     }
@@ -194,10 +196,10 @@ export default function RezervasyonlarPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <Flame className="h-6 w-6 text-orange-500" />
-          Barbekü Alanı Rezervasyonu
+          {t.reservations.title}
         </h1>
         <p className="text-gray-500 dark:text-gray-400">
-          Her gün 22:00&apos;ye kadar açık &middot; Maksimum 3 saat &middot; Tek kişi
+          {t.reservations.subtitle}
         </p>
       </div>
 
@@ -289,18 +291,18 @@ export default function RezervasyonlarPage() {
                   onClick={() => openNewReservation(selectedDate)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Rezervasyon Yap
+                  {t.reservations.addNew}
                 </Button>
               )}
             </div>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-gray-500 text-sm">Yükleniyor...</p>
+              <p className="text-gray-500 text-sm">{t.common.loading}</p>
             ) : selectedDateReservations.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Flame className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p>Bu gün için rezervasyon yok</p>
+                <p>{t.reservations.noReservations}</p>
                 {selectedDate >= today && (
                   <p className="text-sm mt-1">
                     Barbekü alanını rezerve etmek için yukarıdaki butona tıklayın
@@ -358,7 +360,7 @@ export default function RezervasyonlarPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              Yeni Rezervasyon
+              {t.reservations.addNew}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -373,7 +375,7 @@ export default function RezervasyonlarPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Başlangıç Saati</Label>
+              <Label>{t.reservations.startTime}</Label>
               <Select value={baslangic} onValueChange={(v) => v && setBaslangic(v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -389,7 +391,7 @@ export default function RezervasyonlarPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Süre</Label>
+              <Label>{t.common.time}</Label>
               <Select value={sure} onValueChange={(v) => v && setSure(v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -408,7 +410,7 @@ export default function RezervasyonlarPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Açıklama (opsiyonel)</Label>
+              <Label>{t.reservations.note}</Label>
               <Input
                 placeholder="Örn: Doğum günü kutlaması"
                 value={aciklama}
@@ -427,7 +429,7 @@ export default function RezervasyonlarPage() {
               onClick={handleCreateReservation}
               disabled={submitting || Number(baslangic) + Number(sure) > 22}
             >
-              {submitting ? "Kaydediliyor..." : "Rezervasyon Yap"}
+              {submitting ? t.common.saving : t.reservations.addNew}
             </Button>
 
             {Number(baslangic) + Number(sure) > 22 && (

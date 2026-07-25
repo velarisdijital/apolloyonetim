@@ -15,7 +15,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { ad, soyad, telefon } = body;
+    const { ad, soyad, telefon, locale } = body;
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -23,6 +23,7 @@ export async function PUT(req: Request) {
         ad,
         soyad,
         telefon,
+        ...(locale !== undefined && { locale }),
       },
       select: {
         id: true,
@@ -31,6 +32,7 @@ export async function PUT(req: Request) {
         soyad: true,
         telefon: true,
         rol: true,
+        locale: true,
       },
     });
 

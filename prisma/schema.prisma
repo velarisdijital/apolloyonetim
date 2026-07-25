@@ -48,10 +48,88 @@ enum ArizaDurumu {
   TAMAMLANDI
 }
 
+enum ArizaOncelik {
+  DUSUK
+  NORMAL
+  YUKSEK
+  ACIL
+}
+
+enum SayacTipi {
+  SU
+  ELEKTRIK
+  DOGALGAZ
+}
+
+enum ZiyaretciTipi {
+  ZIYARETCI
+  KARGO
+  KURYE
+  HIZMET
+}
+
+enum AcilDurumTipi {
+  YANGIN
+  SU_BASKINI
+  GAZ_KACAGI
+  GUVENLIK
+  SAGLIK
+  DIGER
+}
+
+enum BelgeKategorisi {
+  SIGORTA
+  SOZLESME
+  YONETIM_PLANI
+  DASK
+  ISKAN
+  PROJE
+  DIGER
+}
+
 enum OnayDurumu {
   BEKLEMEDE
   ONAYLANDI
   REDDEDILDI
+}
+
+enum GorevDurumu {
+  BEKLEMEDE
+  DEVAM_EDIYOR
+  TAMAMLANDI
+  IPTAL
+}
+
+enum GorevOncelik {
+  DUSUK
+  NORMAL
+  YUKSEK
+  ACIL
+}
+
+enum DemirbasDurumu {
+  AKTIF
+  BAKIM_GEREKLI
+  ARIZALI
+  KULLANIM_DISI
+}
+
+enum BakimDurumu {
+  PLANLI
+  DEVAM_EDIYOR
+  TAMAMLANDI
+  ERTELENDI
+}
+
+enum AnketDurumu {
+  AKTIF
+  TAMAMLANDI
+  IPTAL
+}
+
+enum StokHareketTipi {
+  GIRIS
+  CIKIS
 }
 
 model User {
@@ -61,6 +139,7 @@ model User {
   ad            String
   soyad         String
   telefon       String?
+  locale        String?   @default("tr")
   rol           Role      @default(EV_SAHIBI)
   aktif         Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -84,6 +163,25 @@ model User {
   binaKurallari     BinaKurali[]
   sentMessages      ChatMessage[]     @relation("MessageSender")
   chatRoomMembers   ChatRoomMember[]
+  bildirilenIhlaller Ihlal[]          @relation("IhlalBildiren")
+  onaylananIhlaller  Ihlal[]          @relation("IhlalOnaylayan")
+  sayacOkumalari     SayacOkuma[]
+  ziyaretciler       Ziyaretci[]      @relation("ZiyaretciKaydeden")
+  araclar            Arac[]
+  evcilHayvanlar     EvcilHayvan[]
+  acilDurumlar       AcilDurum[]
+  belgeler           Belge[]
+  hizmetSaglayicilar HizmetSaglayici[]
+  olusturulanGorevler Gorev[]        @relation("GorevOlusturan")
+  atananGorevler      Gorev[]        @relation("GorevAtanan")
+  anketCevaplari      AnketCevap[]
+  etkinlikKatilimlar  EtkinlikKatilim[]
+  stokHareketleri     StokHareket[]
+  personelMaaslar     PersonelMaas[]
+  temizlikYukleyen    TemizlikKayit[]
+  sikayetler          Sikayet[]        @relation("SikayetBildiren")
+  paketler            PaketKargo[]     @relation("PaketAlici")
+  paketTeslimler      PaketKargo[]     @relation("PaketTeslimEden")
 
   @@index([buildingId])
   @@index([email])
@@ -110,6 +208,36 @@ model Building {
   arizaBildirimleri ArizaBildirimi[]
   binaKurallari BinaKurali[]
   chatRooms     ChatRoom[]
+  cezaKurallari CezaKurali[]
+  ihlaller      Ihlal[]
+  sayaclar      Sayac[]
+  sayacOkumalari SayacOkuma[]
+  ziyaretciler  Ziyaretci[]
+  araclar       Arac[]
+  evcilHayvanlar EvcilHayvan[]
+  acilDurumlar  AcilDurum[]
+  belgeler      Belge[]
+  ortakAlanlar  OrtakAlan[]
+  hizmetSaglayicilar HizmetSaglayici[]
+  demirbaslar       Demirbas[]
+  periyodikBakimlar PeriyodikBakim[]
+  gorevler          Gorev[]
+  anketler          Anket[]
+  etkinlikler       Etkinlik[]
+  stoklar           StokMalzeme[]
+  stokHareketleri   StokHareket[]
+  aidatAyarlari     AidatAyar[]
+  butceler          Butce[]
+  personeller       Personel[]
+  personelMaaslar   PersonelMaas[]
+  kiraSozlesmeleri   KiraSozlesmesi[]
+  sigortaPoliceleri  SigortaPolice[]
+  tasinmaBildirimleri TasinmaBildirimi[]
+  guvenlikDenetimleri GuvenlikDenetim[]
+  temizlikKayitlari   TemizlikKayit[]
+  sikayetler          Sikayet[]
+  paketKargolar       PaketKargo[]
+  binaFotograflari    BinaFotograf[]
 }
 
 model Apartment {
@@ -125,6 +253,13 @@ model Apartment {
   residents   User[]
   payments    Payment[]
   duesItems   DuesItem[]
+  ihlaller    Ihlal[]
+  sayaclar    Sayac[]
+  araclar     Arac[]
+  evcilHayvanlar EvcilHayvan[]
+  ziyaretciler   Ziyaretci[]
+  kiraSozlesmeleri KiraSozlesmesi[]
+  tasinmaBildirimleri TasinmaBildirimi[]
 
   @@unique([buildingId, no])
   @@index([buildingId])
@@ -162,6 +297,8 @@ model Dues {
   tutarKisi       Decimal  @db.Decimal(10, 2)
   aciklama        String?
   sonOdemeTarihi  DateTime
+  gecikmeFaiziOrani Decimal? @db.Decimal(5, 2)
+  otomatikOlusturuldu Boolean @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -288,6 +425,8 @@ model Reservation {
   building        Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
   userId          String
   user            User     @relation(fields: [userId], references: [id])
+  ortakAlanId     String?
+  ortakAlan       OrtakAlan? @relation(fields: [ortakAlanId], references: [id])
 
   @@index([buildingId, tarih])
 }
@@ -312,8 +451,11 @@ model ArizaBildirimi {
   id          String       @id @default(cuid())
   baslik      String
   aciklama    String       @db.Text
-  konum       String       // e.g. "3. Kat Merdiven", "Otopark"
+  konum       String
   durum       ArizaDurumu  @default(BEKLEMEDE)
+  oncelik     ArizaOncelik @default(NORMAL)
+  fotograflar String[]
+  tahminiMaliyet Decimal?  @db.Decimal(10, 2)
   yanit       String?      @db.Text
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -341,6 +483,58 @@ model BinaKurali {
   createdBy   User     @relation(fields: [createdById], references: [id])
 
   @@index([buildingId, sira])
+}
+
+enum IhlalDurumu {
+  BILDIRILDI
+  UYARI_VERILDI
+  CEZA_VERILDI
+  IPTAL
+}
+
+model CezaKurali {
+  id          String   @id @default(cuid())
+  siraNo      Int
+  eylem       String   @db.Text
+  uygulama    String
+  kademe      Int
+  cezaOrani   String
+  tekrarKatla Boolean  @default(true)
+  aktif       Boolean  @default(true)
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  ihlaller    Ihlal[]
+
+  @@unique([buildingId, siraNo])
+  @@index([buildingId])
+}
+
+model Ihlal {
+  id              String       @id @default(cuid())
+  aciklama        String       @db.Text
+  kanitYollari    String[]
+  durum           IhlalDurumu  @default(BILDIRILDI)
+  cezaTutar       Decimal?     @db.Decimal(10, 2)
+  yoneticiNotu    String?
+  duvardaPaylas   Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  kuralId         String
+  kural           CezaKurali   @relation(fields: [kuralId], references: [id])
+  apartmentId     String
+  apartment       Apartment    @relation(fields: [apartmentId], references: [id])
+  bildirenId      String
+  bildiren        User         @relation("IhlalBildiren", fields: [bildirenId], references: [id])
+  onaylayanId     String?
+  onaylayan       User?        @relation("IhlalOnaylayan", fields: [onaylayanId], references: [id])
+
+  @@index([apartmentId])
+  @@index([durum])
+  @@index([buildingId])
+  buildingId      String
+  building        Building     @relation(fields: [buildingId], references: [id], onDelete: Cascade)
 }
 
 enum ChatRoomTipi {
@@ -389,4 +583,720 @@ model ChatMessage {
   sender      User     @relation("MessageSender", fields: [senderId], references: [id])
 
   @@index([chatRoomId, createdAt])
+}
+
+// ==========================================
+// SAYAÇ TAKİBİ
+// ==========================================
+
+model Sayac {
+  id          String    @id @default(cuid())
+  tip         SayacTipi
+  sayacNo     String
+  konum       String?
+  createdAt   DateTime  @default(now())
+
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId String?
+  apartment   Apartment? @relation(fields: [apartmentId], references: [id])
+  okumalar    SayacOkuma[]
+
+  @@unique([buildingId, sayacNo])
+  @@index([buildingId, tip])
+}
+
+model SayacOkuma {
+  id          String    @id @default(cuid())
+  deger       Decimal   @db.Decimal(12, 3)
+  tarih       DateTime  @default(now())
+  fotografYolu String?
+  not         String?
+  createdAt   DateTime  @default(now())
+
+  sayacId     String
+  sayac       Sayac     @relation(fields: [sayacId], references: [id], onDelete: Cascade)
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  okuyanId    String
+  okuyan      User      @relation(fields: [okuyanId], references: [id])
+
+  @@index([sayacId, tarih])
+}
+
+// ==========================================
+// ZİYARETÇİ / KARGO YÖNETİMİ
+// ==========================================
+
+model Ziyaretci {
+  id            String        @id @default(cuid())
+  tip           ZiyaretciTipi @default(ZIYARETCI)
+  adSoyad       String
+  tcKimlik      String?
+  plaka         String?
+  firma         String?
+  not           String?
+  girisTarihi   DateTime      @default(now())
+  cikisTarihi   DateTime?
+  teslimAlindi  Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+
+  buildingId    String
+  building      Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId   String?
+  apartment     Apartment?    @relation(fields: [apartmentId], references: [id])
+  kaydedildiBy  String
+  kaydeden      User          @relation("ZiyaretciKaydeden", fields: [kaydedildiBy], references: [id])
+
+  @@index([buildingId, girisTarihi])
+  @@index([apartmentId])
+}
+
+// ==========================================
+// ARAÇ KAYIT SİSTEMİ
+// ==========================================
+
+model Arac {
+  id          String   @id @default(cuid())
+  plaka       String
+  marka       String?
+  model       String?
+  renk        String?
+  tip         String   @default("OTOMOBIL")
+  parkYeri    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId String?
+  apartment   Apartment? @relation(fields: [apartmentId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([buildingId, plaka])
+  @@index([buildingId])
+}
+
+// ==========================================
+// EVCİL HAYVAN KAYDI
+// ==========================================
+
+model EvcilHayvan {
+  id          String   @id @default(cuid())
+  ad          String
+  tur         String
+  cins        String?
+  yas         Int?
+  asiDurumu   Boolean  @default(false)
+  asiTarihi   DateTime?
+  chipNo      String?
+  not         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId String?
+  apartment   Apartment? @relation(fields: [apartmentId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([buildingId])
+}
+
+// ==========================================
+// ACİL DURUM SİSTEMİ
+// ==========================================
+
+model AcilDurum {
+  id          String         @id @default(cuid())
+  tip         AcilDurumTipi
+  aciklama    String?        @db.Text
+  konum       String?
+  cozuldu     Boolean        @default(false)
+  cozumNotu   String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  buildingId  String
+  building    Building       @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+
+  @@index([buildingId, createdAt])
+}
+
+// ==========================================
+// BELGE YÖNETİMİ
+// ==========================================
+
+model Belge {
+  id          String           @id @default(cuid())
+  baslik      String
+  kategori    BelgeKategorisi  @default(DIGER)
+  dosyaYolu   String
+  dosyaAdi    String
+  dosyaBoyut  Int?
+  aciklama    String?
+  gecerlilikTarihi DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  buildingId  String
+  building    Building         @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  yukleyenId  String
+  yukleyen    User             @relation(fields: [yukleyenId], references: [id])
+
+  @@index([buildingId, kategori])
+}
+
+// ==========================================
+// ORTAK ALAN YÖNETİMİ
+// ==========================================
+
+model OrtakAlan {
+  id              String   @id @default(cuid())
+  ad              String
+  aciklama        String?
+  kapasite        Int?
+  acilisSaati     Int      @default(8)
+  kapanisSaati    Int      @default(22)
+  maxSure         Int      @default(3)
+  aktif           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buildingId      String
+  building        Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  reservations    Reservation[]
+
+  @@index([buildingId])
+}
+
+// ==========================================
+// HİZMET SAĞLAYICI REHBERİ
+// ==========================================
+
+model HizmetSaglayici {
+  id          String   @id @default(cuid())
+  ad          String
+  kategori    String
+  telefon     String
+  adres       String?
+  aciklama    String?
+  puan        Decimal? @db.Decimal(2, 1)
+  aktif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  ekleyenId   String
+  ekleyen     User     @relation(fields: [ekleyenId], references: [id])
+
+  @@index([buildingId, kategori])
+}
+
+// ==========================================
+// OTOMATİK AİDAT AYARLARI
+// ==========================================
+
+model AidatAyar {
+  id                  String   @id @default(cuid())
+  tutarKisi           Decimal  @db.Decimal(10, 2)
+  metrekareGoreDagit  Boolean  @default(false)
+  gecikmeFaiziOrani   Decimal  @db.Decimal(5, 2) @default(5)
+  sonOdemeGunu        Int      @default(15)
+  otomatikOlustur     Boolean  @default(false)
+  aciklama            String?
+  aktif               Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  buildingId          String   @unique
+  building            Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// DEMİRBAŞ TAKİBİ
+// ==========================================
+
+model Demirbas {
+  id              String          @id @default(cuid())
+  ad              String
+  kategori        String
+  marka           String?
+  model           String?
+  seriNo          String?
+  konum           String?
+  durum           DemirbasDurumu  @default(AKTIF)
+  edinmeTarihi    DateTime?
+  garantiBitis    DateTime?
+  deger           Decimal?        @db.Decimal(10, 2)
+  fotografYolu    String?
+  not             String?
+  aktif           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  buildingId      String
+  building        Building         @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  bakimlar        PeriyodikBakim[]
+
+  @@index([buildingId, kategori])
+  @@index([buildingId, durum])
+}
+
+// ==========================================
+// PERİYODİK BAKIM PLANLAMA
+// ==========================================
+
+model PeriyodikBakim {
+  id              String        @id @default(cuid())
+  baslik          String
+  aciklama        String?       @db.Text
+  periyotGun      Int
+  sonBakimTarihi  DateTime?
+  sonrakiBakimTarihi DateTime?
+  durum           BakimDurumu   @default(PLANLI)
+  maliyet         Decimal?      @db.Decimal(10, 2)
+  bakimYapan      String?
+  bakimNotu       String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  buildingId      String
+  building        Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  demirbasId      String?
+  demirbas        Demirbas?     @relation(fields: [demirbasId], references: [id])
+
+  @@index([buildingId, durum])
+  @@index([sonrakiBakimTarihi])
+}
+
+// ==========================================
+// GÖREV / İŞ ATAMA SİSTEMİ
+// ==========================================
+
+model Gorev {
+  id              String        @id @default(cuid())
+  baslik          String
+  aciklama        String?       @db.Text
+  oncelik         GorevOncelik  @default(NORMAL)
+  durum           GorevDurumu   @default(BEKLEMEDE)
+  sonTarih        DateTime?
+  tamamlanmaTarihi DateTime?
+  tamamlanmaNotu  String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  buildingId      String
+  building        Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  olusturanId     String
+  olusturan       User          @relation("GorevOlusturan", fields: [olusturanId], references: [id])
+  atananId        String?
+  atanan          User?         @relation("GorevAtanan", fields: [atananId], references: [id])
+
+  @@index([buildingId, durum])
+  @@index([atananId])
+}
+
+// ==========================================
+// ANKET SİSTEMİ
+// ==========================================
+
+model Anket {
+  id          String       @id @default(cuid())
+  baslik      String
+  aciklama    String?      @db.Text
+  durum       AnketDurumu  @default(AKTIF)
+  bitisTarihi DateTime
+  anonim      Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  buildingId  String
+  building    Building     @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  sorular     AnketSoru[]
+
+  @@index([buildingId, durum])
+}
+
+model AnketSoru {
+  id          String   @id @default(cuid())
+  soru        String
+  tip         String   @default("TEKLI")
+  secenekler  String   @db.Text
+  sira        Int      @default(0)
+  zorunlu     Boolean  @default(true)
+
+  anketId     String
+  anket       Anket    @relation(fields: [anketId], references: [id], onDelete: Cascade)
+  cevaplar    AnketCevap[]
+
+  @@index([anketId, sira])
+}
+
+model AnketCevap {
+  id          String   @id @default(cuid())
+  cevap       String
+  createdAt   DateTime @default(now())
+
+  soruId      String
+  soru        AnketSoru @relation(fields: [soruId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([soruId, userId])
+}
+
+// ==========================================
+// ETKİNLİK YÖNETİMİ
+// ==========================================
+
+model Etkinlik {
+  id          String    @id @default(cuid())
+  baslik      String
+  aciklama    String?   @db.Text
+  tarih       DateTime
+  bitisTarihi DateTime?
+  konum       String?
+  kapasite    Int?
+  fotografYolu String?
+  aktif       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  buildingId  String
+  building    Building          @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  katilimlar  EtkinlikKatilim[]
+
+  @@index([buildingId, tarih])
+}
+
+model EtkinlikKatilim {
+  id          String   @id @default(cuid())
+  durum       String   @default("KATILACAK")
+  createdAt   DateTime @default(now())
+
+  etkinlikId  String
+  etkinlik    Etkinlik @relation(fields: [etkinlikId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([etkinlikId, userId])
+}
+
+// ==========================================
+// STOK / MALZEME TAKİBİ
+// ==========================================
+
+model StokMalzeme {
+  id          String   @id @default(cuid())
+  ad          String
+  kategori    String
+  birim       String   @default("ADET")
+  miktar      Decimal  @db.Decimal(10, 2) @default(0)
+  minimumMiktar Decimal? @db.Decimal(10, 2)
+  birimFiyat  Decimal? @db.Decimal(10, 2)
+  konum       String?
+  aktif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  hareketler  StokHareket[]
+
+  @@index([buildingId, kategori])
+}
+
+model StokHareket {
+  id          String          @id @default(cuid())
+  tip         StokHareketTipi
+  miktar      Decimal         @db.Decimal(10, 2)
+  aciklama    String?
+  createdAt   DateTime        @default(now())
+
+  malzemeId   String
+  malzeme     StokMalzeme     @relation(fields: [malzemeId], references: [id], onDelete: Cascade)
+  buildingId  String
+  building    Building        @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  islemYapanId String
+  islemYapan  User            @relation(fields: [islemYapanId], references: [id])
+
+  @@index([malzemeId, createdAt])
+}
+
+// ==========================================
+// BÜTÇE PLANLAMA
+// ==========================================
+
+model Butce {
+  id          String   @id @default(cuid())
+  yil         Int
+  ay          Int
+  kategori    String
+  planlanan   Decimal  @db.Decimal(10, 2)
+  aciklama    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  @@unique([buildingId, yil, ay, kategori])
+  @@index([buildingId, yil])
+}
+
+// ==========================================
+// PERSONELİ / MAAŞ TAKİBİ
+// ==========================================
+
+model Personel {
+  id          String   @id @default(cuid())
+  ad          String
+  soyad       String
+  gorev       String
+  telefon     String?
+  tcNo        String?
+  sgkNo       String?
+  iseBaslama  DateTime?
+  maas        Decimal  @db.Decimal(10, 2)
+  aktif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId  String
+  building    Building       @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  maaslar     PersonelMaas[]
+
+  @@index([buildingId])
+}
+
+model PersonelMaas {
+  id          String   @id @default(cuid())
+  ay          Int
+  yil         Int
+  brutMaas    Decimal  @db.Decimal(10, 2)
+  netMaas     Decimal  @db.Decimal(10, 2)
+  sgkPrim     Decimal? @db.Decimal(10, 2)
+  vergi       Decimal? @db.Decimal(10, 2)
+  odenmeTarihi DateTime?
+  odendi      Boolean  @default(false)
+  not         String?
+  createdAt   DateTime @default(now())
+
+  personelId  String
+  personel    Personel @relation(fields: [personelId], references: [id], onDelete: Cascade)
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  odendiIsaretleyen String?
+  odendiIsaretleyenUser User? @relation(fields: [odendiIsaretleyen], references: [id])
+
+  @@unique([personelId, ay, yil])
+  @@index([buildingId, yil])
+}
+
+// ==========================================
+// KİRA SÖZLEŞMESİ TAKİBİ
+// ==========================================
+
+model KiraSozlesmesi {
+  id              String   @id @default(cuid())
+  kiracıAdSoyad   String
+  daireBilgisi    String
+  baslangicTarihi DateTime
+  bitisTarihi     DateTime
+  aylikKira       Decimal  @db.Decimal(10, 2)
+  depozito        Decimal? @db.Decimal(10, 2)
+  artisOrani      Decimal? @db.Decimal(5, 2)
+  sozlesmeYolu    String?
+  not             String?
+  aktif           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buildingId      String
+  building        Building   @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId     String?
+  apartment       Apartment? @relation(fields: [apartmentId], references: [id])
+
+  @@index([buildingId])
+  @@index([bitisTarihi])
+}
+
+// ==========================================
+// SİGORTA POLİÇE TAKİBİ
+// ==========================================
+
+model SigortaPolice {
+  id              String   @id @default(cuid())
+  tip             String
+  sirketAdi       String
+  policeNo        String?
+  baslangicTarihi DateTime
+  bitisTarihi     DateTime
+  primTutari      Decimal? @db.Decimal(10, 2)
+  kapsam          String?  @db.Text
+  not             String?
+  aktif           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buildingId      String
+  building        Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  @@index([buildingId])
+  @@index([bitisTarihi])
+}
+
+// ==========================================
+// TAŞINMA BİLDİRİMİ
+// ==========================================
+
+enum TasinmaTipi {
+  GIRIS
+  CIKIS
+}
+
+model TasinmaBildirimi {
+  id              String      @id @default(cuid())
+  tip             TasinmaTipi
+  adSoyad         String
+  daireBilgisi    String
+  tarih           DateTime
+  asansorRezervasyon Boolean  @default(false)
+  anahtarTeslim   Boolean     @default(false)
+  not             String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  buildingId      String
+  building        Building    @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  apartmentId     String?
+  apartment       Apartment?  @relation(fields: [apartmentId], references: [id])
+
+  @@index([buildingId, tarih])
+}
+
+// ==========================================
+// GÜVENLİK DENETİM TAKİBİ
+// ==========================================
+
+model GuvenlikDenetim {
+  id              String   @id @default(cuid())
+  denetimTipi     String
+  tarih           DateTime
+  sonrakiTarih    DateTime?
+  durum           String   @default("PLANLI")
+  denetciAdi      String?
+  bulgular        String?  @db.Text
+  fotografYolu    String?
+  not             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buildingId      String
+  building        Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  @@index([buildingId, denetimTipi])
+  @@index([sonrakiTarih])
+}
+
+// ==========================================
+// TEMİZLİK TAKİP SİSTEMİ
+// ==========================================
+
+model TemizlikKayit {
+  id          String   @id @default(cuid())
+  alan        String
+  fotograflar String   @db.Text
+  not         String?
+  tarih       DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  yukleyenId  String
+  yukleyen    User     @relation(fields: [yukleyenId], references: [id])
+
+  @@index([buildingId, tarih])
+}
+
+// ==========================================
+// ŞİKAYET / ÖNERİ SİSTEMİ
+// ==========================================
+
+enum SikayetDurum {
+  YENI
+  INCELENIYOR
+  COZULDU
+  REDDEDILDI
+}
+
+model Sikayet {
+  id          String       @id @default(cuid())
+  kategori    String
+  baslik      String
+  aciklama    String       @db.Text
+  durum       SikayetDurum @default(YENI)
+  anonim      Boolean      @default(false)
+  yapilanIslem String?     @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  buildingId  String
+  building    Building     @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  bildirenId  String
+  bildiren    User         @relation("SikayetBildiren", fields: [bildirenId], references: [id])
+
+  @@index([buildingId, durum])
+}
+
+// ==========================================
+// PAKET / KARGO TAKİBİ
+// ==========================================
+
+model PaketKargo {
+  id              String    @id @default(cuid())
+  aliciAdi        String
+  daireBilgisi    String
+  kargoFirmasi    String?
+  takipNo         String?
+  teslimTarihi    DateTime  @default(now())
+  alimTarihi      DateTime?
+  teslimEdildi    Boolean   @default(false)
+  fotografYolu    String?
+  not             String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  buildingId      String
+  building        Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  aliciId         String?
+  alici           User?     @relation("PaketAlici", fields: [aliciId], references: [id])
+  teslimEdenId    String?
+  teslimEden      User?     @relation("PaketTeslimEden", fields: [teslimEdenId], references: [id])
+
+  @@index([buildingId, teslimEdildi])
+}
+
+// ==========================================
+// BİNA FOTOĞRAF GALERİSİ
+// ==========================================
+
+model BinaFotograf {
+  id          String   @id @default(cuid())
+  baslik      String
+  aciklama    String?
+  kategori    String
+  fotografYolu String
+  createdAt   DateTime @default(now())
+
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  @@index([buildingId, kategori])
 }

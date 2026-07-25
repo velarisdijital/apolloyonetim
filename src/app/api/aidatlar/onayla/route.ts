@@ -20,65 +20,74 @@ export async function POST(req: NextRequest) {
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { duesItem: { include: { dues: true, payments: true } } },
+    include: { duesItem: { include: { dues: true } } },
   });
 
   if (!payment) {
     return NextResponse.json({ error: "Ödeme bulunamadı" }, { status: 404 });
   }
 
-  await prisma.payment.update({
-    where: { id: paymentId },
-    data: {
-      onayDurumu,
-      onayNotu,
-      onaylayanId: session.user.id,
-    },
-  });
-
-  if (onayDurumu === "ONAYLANDI") {
-    const approvedPayments = payment.duesItem.payments.filter(
-      (p) => p.id === paymentId || p.onayDurumu === "ONAYLANDI"
-    );
-    const toplamOdenen = approvedPayments.reduce(
-      (sum, p) => sum + Number(p.tutar),
-      0
-    );
-
-    const yeniDurum =
-      toplamOdenen >= Number(payment.duesItem.dues.tutarKisi) ? "ODENDI" : "KISMI";
-
-    await prisma.duesItem.update({
-      where: { id: payment.duesItemId },
-      data: { durum: yeniDurum },
+  await prisma.$transaction(async (tx) => {
+    // 1. Update the payment's approval status
+    await tx.payment.update({
+      where: { id: paymentId },
+      data: {
+        onayDurumu,
+        onayNotu,
+        onaylayanId: session.user.id,
+      },
     });
-  } else {
-    const otherApproved = payment.duesItem.payments.filter(
-      (p) => p.id !== paymentId && p.onayDurumu === "ONAYLANDI"
-    );
-    const hasPending = payment.duesItem.payments.some(
-      (p) => p.id !== paymentId && p.onayDurumu === "BEKLEMEDE"
-    );
 
-    let yeniDurum: "ODENMEDI" | "ODENDI" | "KISMI" | "ONAY_BEKLIYOR";
-    if (hasPending) {
-      yeniDurum = "ONAY_BEKLIYOR";
-    } else if (otherApproved.length > 0) {
-      const toplamOdenen = otherApproved.reduce(
+    // 2. Re-fetch all payments for this duesItem after the update
+    const freshPayments = await tx.payment.findMany({
+      where: { duesItemId: payment.duesItemId },
+    });
+
+    // 3. Calculate status from fresh data
+    if (onayDurumu === "ONAYLANDI") {
+      const approvedPayments = freshPayments.filter(
+        (p) => p.onayDurumu === "ONAYLANDI"
+      );
+      const toplamOdenen = approvedPayments.reduce(
         (sum, p) => sum + Number(p.tutar),
         0
       );
-      yeniDurum =
-        toplamOdenen >= Number(payment.duesItem.dues.tutarKisi) ? "ODENDI" : "KISMI";
-    } else {
-      yeniDurum = "ODENMEDI";
-    }
 
-    await prisma.duesItem.update({
-      where: { id: payment.duesItemId },
-      data: { durum: yeniDurum },
-    });
-  }
+      const yeniDurum =
+        toplamOdenen >= Number(payment.duesItem.dues.tutarKisi) ? "ODENDI" : "KISMI";
+
+      await tx.duesItem.update({
+        where: { id: payment.duesItemId },
+        data: { durum: yeniDurum },
+      });
+    } else {
+      const otherApproved = freshPayments.filter(
+        (p) => p.id !== paymentId && p.onayDurumu === "ONAYLANDI"
+      );
+      const hasPending = freshPayments.some(
+        (p) => p.id !== paymentId && p.onayDurumu === "BEKLEMEDE"
+      );
+
+      let yeniDurum: "ODENMEDI" | "ODENDI" | "KISMI" | "ONAY_BEKLIYOR";
+      if (hasPending) {
+        yeniDurum = "ONAY_BEKLIYOR";
+      } else if (otherApproved.length > 0) {
+        const toplamOdenen = otherApproved.reduce(
+          (sum, p) => sum + Number(p.tutar),
+          0
+        );
+        yeniDurum =
+          toplamOdenen >= Number(payment.duesItem.dues.tutarKisi) ? "ODENDI" : "KISMI";
+      } else {
+        yeniDurum = "ODENMEDI";
+      }
+
+      await tx.duesItem.update({
+        where: { id: payment.duesItemId },
+        data: { durum: yeniDurum },
+      });
+    }
+  });
 
   await prisma.notification.create({
     data: {

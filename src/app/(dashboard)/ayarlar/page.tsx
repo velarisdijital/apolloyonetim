@@ -61,12 +61,12 @@ export default function AyarlarPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Profil güncellenirken bir hata oluştu.");
+        toast.error(data.error || t.settings.profileUpdateError);
         return;
       }
-      toast.success("Profil başarıyla güncellendi.");
+      toast.success(t.settings.profileUpdated);
     } catch {
-      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      toast.error(t.errors.generic);
     } finally {
       setProfilYukleniyor(false);
     }
@@ -74,7 +74,7 @@ export default function AyarlarPage() {
 
   const handleSifreGuncelle = async () => {
     if (yeniSifre !== yeniSifreTekrar) {
-      toast.error("Yeni şifreler eşleşmiyor.");
+      toast.error(t.settings.passwordMismatch);
       return;
     }
     setSifreYukleniyor(true);
@@ -86,15 +86,15 @@ export default function AyarlarPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Şifre güncellenirken bir hata oluştu.");
+        toast.error(data.error || t.settings.passwordUpdateError);
         return;
       }
-      toast.success("Şifre başarıyla güncellendi.");
+      toast.success(t.settings.passwordUpdated);
       setMevcutSifre("");
       setYeniSifre("");
       setYeniSifreTekrar("");
     } catch {
-      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      toast.error(t.errors.generic);
     } finally {
       setSifreYukleniyor(false);
     }
@@ -106,9 +106,9 @@ export default function AyarlarPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <Settings className="h-6 w-6" />
-          Ayarlar
+          {t.settings.title}
         </h1>
-        <p className="text-muted-foreground">Hesap ve profil ayarları</p>
+        <p className="text-muted-foreground">{t.settings.subtitle}</p>
       </div>
 
       {/* Profil Bilgileri */}
@@ -116,46 +116,46 @@ export default function AyarlarPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Profil Bilgileri
+            {t.settings.profileInfo}
           </CardTitle>
           <CardDescription>
-            Kişisel bilgilerinizi güncelleyin
+            {t.settings.profileSubtitle}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ad">Ad</Label>
+              <Label htmlFor="ad">{t.settings.name}</Label>
               <Input
                 id="ad"
                 value={ad}
                 onChange={(e) => setAd(e.target.value)}
-                placeholder="Adınız"
+                placeholder={t.settings.name}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="soyad">Soyad</Label>
+              <Label htmlFor="soyad">{t.settings.surname}</Label>
               <Input
                 id="soyad"
                 value={soyad}
                 onChange={(e) => setSoyad(e.target.value)}
-                placeholder="Soyadınız"
+                placeholder={t.settings.surname}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="telefon">Telefon</Label>
+            <Label htmlFor="telefon">{t.settings.phone}</Label>
             <Input
               id="telefon"
               value={telefon}
               onChange={(e) => setTelefon(e.target.value)}
-              placeholder="05XX XXX XX XX"
+              placeholder={t.settings.phonePlaceholder}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta</Label>
+            <Label htmlFor="email">{t.settings.email}</Label>
             <Input
               id="email"
               value={session?.user?.email ?? ""}
@@ -169,7 +169,7 @@ export default function AyarlarPage() {
 
           <div className="flex justify-end">
             <Button onClick={handleProfilKaydet} disabled={profilYukleniyor}>
-              {profilYukleniyor ? "Kaydediliyor..." : "Kaydet"}
+              {profilYukleniyor ? t.common.saving : t.common.save}
             </Button>
           </div>
         </CardContent>
@@ -180,43 +180,43 @@ export default function AyarlarPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Şifre Değiştir
+            {t.settings.changePassword}
           </CardTitle>
           <CardDescription>
-            Hesap şifrenizi güncelleyin
+            {t.settings.changePasswordSubtitle}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="mevcutSifre">Mevcut Şifre</Label>
+            <Label htmlFor="mevcutSifre">{t.settings.currentPassword}</Label>
             <Input
               id="mevcutSifre"
               type="password"
               value={mevcutSifre}
               onChange={(e) => setMevcutSifre(e.target.value)}
-              placeholder="Mevcut şifreniz"
+              placeholder={t.settings.currentPasswordPlaceholder}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="yeniSifre">Yeni Şifre</Label>
+              <Label htmlFor="yeniSifre">{t.settings.newPassword}</Label>
               <Input
                 id="yeniSifre"
                 type="password"
                 value={yeniSifre}
                 onChange={(e) => setYeniSifre(e.target.value)}
-                placeholder="Yeni şifreniz"
+                placeholder={t.settings.newPasswordPlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="yeniSifreTekrar">Yeni Şifre Tekrar</Label>
+              <Label htmlFor="yeniSifreTekrar">{t.settings.confirmPassword}</Label>
               <Input
                 id="yeniSifreTekrar"
                 type="password"
                 value={yeniSifreTekrar}
                 onChange={(e) => setYeniSifreTekrar(e.target.value)}
-                placeholder="Yeni şifrenizi tekrar girin"
+                placeholder={t.settings.confirmPasswordPlaceholder}
               />
             </div>
           </div>
@@ -225,7 +225,7 @@ export default function AyarlarPage() {
 
           <div className="flex justify-end">
             <Button onClick={handleSifreGuncelle} disabled={sifreYukleniyor}>
-              {sifreYukleniyor ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+              {sifreYukleniyor ? t.common.processing : t.settings.updatePassword}
             </Button>
           </div>
         </CardContent>

@@ -31,6 +31,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bu aidat size ait değil" }, { status: 403 });
   }
 
+  if (duesItem.durum === "ODENDI") {
+    return NextResponse.json(
+      { error: "Bu aidat kalemi zaten ödenmiş." },
+      { status: 400 }
+    );
+  }
+
   const odeme = await prisma.payment.create({
     data: {
       tutar,

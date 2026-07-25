@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Vote, Plus, BarChart3, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface PollVote {
   id: string;
@@ -31,14 +32,11 @@ const durumRenk: Record<string, string> = {
   IPTAL: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-const durumEtiket: Record<string, string> = {
-  AKTIF: "Aktif",
-  TAMAMLANDI: "Tamamlandı",
-  IPTAL: "İptal",
-};
+// durumEtiket is now derived from translations inside the component
 
 export default function OylamalarPage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingPollId, setVotingPollId] = useState<string | null>(null);
@@ -85,7 +83,7 @@ export default function OylamalarPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Yükleniyor...</p>
+        <p className="text-muted-foreground">{t.common.loading}</p>
       </div>
     );
   }
@@ -94,14 +92,14 @@ export default function OylamalarPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Oylamalar</h1>
-          <p className="text-muted-foreground">Bina oylamaları</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.polls.title}</h1>
+          <p className="text-muted-foreground">{t.polls.subtitle}</p>
         </div>
         {userRole === "MASTER_ADMIN" && (
           <Link href="/oylamalar/ekle">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Oylama
+              {t.polls.addNew}
             </Button>
           </Link>
         )}
@@ -111,7 +109,7 @@ export default function OylamalarPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Vote className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg">Henüz oylama yok</p>
+            <p className="text-muted-foreground text-lg">{t.polls.noPolls}</p>
           </CardContent>
         </Card>
       ) : (
@@ -131,14 +129,14 @@ export default function OylamalarPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{poll.soru}</CardTitle>
                     <Badge className={durumRenk[poll.durum]} variant="secondary">
-                      {durumEtiket[poll.durum]}
+                      {poll.durum === "AKTIF" ? t.polls.active : poll.durum === "TAMAMLANDI" ? t.polls.completed : t.polls.cancelled}
                     </Badge>
                   </div>
                   <CardDescription>
-                    Bitiş tarihi:{" "}
+                    {t.polls.endDate}:{" "}
                     {new Date(poll.bitisTarihi).toLocaleDateString("tr-TR")}
                     {" · "}
-                    {toplamOy} oy kullanıldı
+                    {t.polls.votesUsed.replace("{count}", String(toplamOy))}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -164,7 +162,7 @@ export default function OylamalarPage() {
                                 )}
                               </span>
                               <span className="text-muted-foreground">
-                                {oyCount} oy ({yuzde}%)
+                                {oyCount} {t.polls.votes} ({yuzde}%)
                               </span>
                             </div>
                             <div className="w-full bg-secondary rounded-full h-3">

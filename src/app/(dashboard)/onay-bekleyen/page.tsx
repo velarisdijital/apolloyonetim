@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { ClipboardCheck, Check, X, FileText, Image as ImageIcon, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { KATEGORI_LABELS } from "@/lib/constants";
 import { formatPara } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface Gider {
   id: string;
@@ -39,14 +39,9 @@ const ONAY_BADGE: Record<string, string> = {
   REDDEDILDI: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
-const ONAY_LABELS: Record<string, string> = {
-  BEKLEMEDE: "Onay Bekliyor",
-  ONAYLANDI: "Onaylandı",
-  REDDEDILDI: "Reddedildi",
-};
-
 export default function OnayBekleyenPage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [giderler, setGiderler] = useState<Gider[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"BEKLEMEDE" | "ONAYLANDI" | "REDDEDILDI" | "TUMU">("BEKLEMEDE");
@@ -80,15 +75,15 @@ export default function OnayBekleyenPage() {
         body: JSON.stringify({ onayDurumu, onayNotu }),
       });
       if (res.ok) {
-        toast.success(onayDurumu === "ONAYLANDI" ? "Gider onaylandı" : "Gider reddedildi");
+        toast.success(onayDurumu === "ONAYLANDI" ? t.approval.approvedSuccess : t.approval.rejectedSuccess);
         setSelectedGider(null);
         setOnayNotu("");
         await fetchGiderler();
       } else {
-        toast.error("İşlem başarısız");
+        toast.error(t.approval.operationFailed);
       }
     } catch {
-      toast.error("Bir hata oluştu");
+      toast.error(t.errors.generic);
     } finally {
       setSubmitting(false);
     }
@@ -108,10 +103,10 @@ export default function OnayBekleyenPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <ClipboardCheck className="h-6 w-6 text-amber-600" />
-          Onay Bekleyenler
+          {t.approval.title}
         </h1>
         <p className="text-gray-500 dark:text-gray-400">
-          Mali işlemleri inceleyin ve onaylayın
+          {t.approval.subtitle}
         </p>
       </div>
 
@@ -123,21 +118,21 @@ export default function OnayBekleyenPage() {
             size="sm"
             onClick={() => setFilter(f)}
           >
-            {f === "TUMU" ? "Tümü" : ONAY_LABELS[f] || f}
+            {f === "TUMU" ? t.common.all : f === "BEKLEMEDE" ? t.approval.pending : f === "ONAYLANDI" ? t.approval.approved : t.approval.rejected}
           </Button>
         ))}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Yükleniyor...</div>
+          <div className="text-gray-500">{t.common.loading}</div>
         </div>
       ) : giderler.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ClipboardCheck className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
             <p className="text-lg font-medium text-gray-500">
-              {filter === "BEKLEMEDE" ? "Onay bekleyen gider yok" : "Kayıt bulunamadı"}
+              {filter === "BEKLEMEDE" ? t.approval.noItems : t.approval.noRecords}
             </p>
           </CardContent>
         </Card>
@@ -150,10 +145,10 @@ export default function OnayBekleyenPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="secondary">
-                        {KATEGORI_LABELS[gider.kategori] || gider.kategori}
+                        {t.categories[gider.kategori as keyof typeof t.categories] || gider.kategori}
                       </Badge>
                       <Badge className={ONAY_BADGE[gider.onayDurumu]}>
-                        {ONAY_LABELS[gider.onayDurumu]}
+                        {gider.onayDurumu === "BEKLEMEDE" ? t.approval.pending : gider.onayDurumu === "ONAYLANDI" ? t.approval.approved : t.approval.rejected}
                       </Badge>
                     </div>
                     <p className="font-medium">{gider.aciklama}</p>
@@ -165,7 +160,7 @@ export default function OnayBekleyenPage() {
                         <Clock className="h-3.5 w-3.5" />
                         {formatTarih(gider.tarih)}
                       </span>
-                      <span>Ekleyen: {gider.createdBy.ad} {gider.createdBy.soyad}</span>
+                      <span>{t.expenses.addedBy}: {gider.createdBy.ad} {gider.createdBy.soyad}</span>
                       {gider.fisYolu && (
                         <a
                           href={gider.fisYolu}
@@ -178,18 +173,18 @@ export default function OnayBekleyenPage() {
                           ) : (
                             <ImageIcon className="h-3.5 w-3.5" />
                           )}
-                          Fiş Görüntüle
+                          {t.approval.viewReceipt}
                         </a>
                       )}
                     </div>
                     {gider.onayNotu && (
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
-                        Not: {gider.onayNotu}
+                        {t.common.note}: {gider.onayNotu}
                       </p>
                     )}
                     {gider.onaylayan && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Onaylayan: {gider.onaylayan.ad} {gider.onaylayan.soyad}
+                        {t.approval.approvedBy}: {gider.onaylayan.ad} {gider.onaylayan.soyad}
                       </p>
                     )}
                   </div>
@@ -202,7 +197,7 @@ export default function OnayBekleyenPage() {
                         onClick={() => handleOnay(gider.id, "ONAYLANDI")}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        Onayla
+                        {t.approval.approve}
                       </Button>
                       <Button
                         size="sm"
@@ -213,7 +208,7 @@ export default function OnayBekleyenPage() {
                         }}
                       >
                         <X className="h-4 w-4 mr-1" />
-                        Reddet
+                        {t.approval.reject}
                       </Button>
                     </div>
                   )}
@@ -227,7 +222,7 @@ export default function OnayBekleyenPage() {
       <Dialog open={!!selectedGider} onOpenChange={(open) => !open && setSelectedGider(null)}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Gideri Reddet</DialogTitle>
+            <DialogTitle>{t.approval.rejectTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -236,9 +231,9 @@ export default function OnayBekleyenPage() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Red Nedeni (opsiyonel)</Label>
+              <Label>{t.approval.rejectReason}</Label>
               <Textarea
-                placeholder="Red nedenini yazın..."
+                placeholder={t.approval.rejectPlaceholder}
                 value={onayNotu}
                 onChange={(e) => setOnayNotu(e.target.value)}
                 rows={3}
@@ -250,7 +245,7 @@ export default function OnayBekleyenPage() {
                 className="flex-1"
                 onClick={() => setSelectedGider(null)}
               >
-                İptal
+                {t.common.cancel}
               </Button>
               <Button
                 variant="destructive"
@@ -258,7 +253,7 @@ export default function OnayBekleyenPage() {
                 disabled={submitting}
                 onClick={() => selectedGider && handleOnay(selectedGider.id, "REDDEDILDI")}
               >
-                {submitting ? "İşleniyor..." : "Reddet"}
+                {submitting ? t.common.processing : t.approval.reject}
               </Button>
             </div>
           </div>

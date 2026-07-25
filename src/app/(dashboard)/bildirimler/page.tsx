@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, CheckCheck, Mail, MailOpen } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface Bildirim {
   id: string;
@@ -17,16 +18,16 @@ interface Bildirim {
   createdAt: string;
 }
 
-function zamanFarkiHesapla(tarih: string): string {
+function zamanFarkiHesapla(tarih: string, t: { timeAgo: { justNow: string; hoursAgo: string; daysAgo: string } }): string {
   const simdi = new Date();
   const bildirimTarihi = new Date(tarih);
   const farkMs = simdi.getTime() - bildirimTarihi.getTime();
   const farkSaat = Math.floor(farkMs / (1000 * 60 * 60));
   const farkGun = Math.floor(farkMs / (1000 * 60 * 60 * 24));
 
-  if (farkSaat < 1) return "az önce";
-  if (farkSaat < 24) return `${farkSaat} saat önce`;
-  return `${farkGun} gün önce`;
+  if (farkSaat < 1) return t.timeAgo.justNow;
+  if (farkSaat < 24) return t.timeAgo.hoursAgo.replace("{{count}}", String(farkSaat));
+  return t.timeAgo.daysAgo.replace("{{count}}", String(farkGun));
 }
 
 function tipRengi(tip: string): string {
@@ -46,6 +47,7 @@ function tipRengi(tip: string): string {
 
 export default function BildirimlerPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [bildirimler, setBildirimler] = useState<Bildirim[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
 
@@ -113,8 +115,8 @@ export default function BildirimlerPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bildirimler</h1>
-          <p className="text-muted-foreground">Bildirimleriniz</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t.notifications.title}</h1>
+          <p className="text-muted-foreground">{t.notifications.title}</p>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -135,12 +137,12 @@ export default function BildirimlerPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Bildirimler</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t.notifications.title}</h1>
             {okunmamisSayisi > 0 && (
               <Badge variant="destructive">{okunmamisSayisi}</Badge>
             )}
           </div>
-          <p className="text-muted-foreground">Bildirimleriniz</p>
+          <p className="text-muted-foreground">{t.notifications.title}</p>
         </div>
         {okunmamisSayisi > 0 && (
           <Button
@@ -150,7 +152,7 @@ export default function BildirimlerPage() {
             className="gap-2"
           >
             <CheckCheck className="h-4 w-4" />
-            Tümünü Okundu İşaretle
+            {t.notifications.markAllRead}
           </Button>
         )}
       </div>
@@ -160,7 +162,7 @@ export default function BildirimlerPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Bell className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-lg">
-              Bildiriminiz bulunmuyor
+              {t.notifications.noNotifications}
             </p>
           </CardContent>
         </Card>
@@ -206,7 +208,7 @@ export default function BildirimlerPage() {
                       {bildirim.mesaj}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {zamanFarkiHesapla(bildirim.createdAt)}
+                      {zamanFarkiHesapla(bildirim.createdAt, t)}
                     </p>
                   </div>
                 </div>

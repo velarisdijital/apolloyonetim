@@ -1,45 +1,70 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { formatTarih } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Calendar } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/context";
 
-export default async function ToplantilarPage() {
-  const session = await getServerSession(authOptions);
+interface Toplanti {
+  id: string;
+  baslik: string;
+  tarih: string;
+  icerik: string;
+  katilimcilar: string | null;
+  createdBy: { ad: string; soyad: string };
+}
 
-  if (!session?.user?.buildingId) {
-    redirect("/select-building");
-  }
+export default function ToplantilarPage() {
+  const { data: session } = useSession();
+  const { t } = useTranslation();
+  const [toplantilar, setToplantilar] = useState<Toplanti[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toplantilar = await prisma.meeting.findMany({
-    where: { buildingId: session.user.buildingId },
-    orderBy: { tarih: "desc" },
-    include: {
-      createdBy: {
-        select: { ad: true, soyad: true },
-      },
-    },
-  });
+  useEffect(() => {
+    const fetchToplantilar = async () => {
+      try {
+        const res = await fetch("/api/toplantilar");
+        if (res.ok) {
+          const data = await res.json();
+          setToplantilar(data);
+        }
+      } catch (error) {
+        console.error("Toplantılar yüklenirken hata:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchToplantilar();
+  }, []);
 
+  const userRole = (session?.user as { rol?: string })?.rol;
   const now = new Date();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">{t.common.loading}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Toplantılar</h1>
-          <p className="text-muted-foreground">Bina toplantı kayıtları</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.meetings.title}</h1>
+          <p className="text-muted-foreground">{t.meetings.subtitle}</p>
         </div>
-        {session.user.rol === "MASTER_ADMIN" && (
+        {userRole === "MASTER_ADMIN" && (
           <Link href="/toplantilar/ekle">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Toplantı
+              {t.meetings.addNew}
             </Button>
           </Link>
         )}
@@ -50,7 +75,7 @@ export default async function ToplantilarPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium text-muted-foreground">
-              Henüz toplantı kaydı yok
+              {t.meetings.noMeetings}
             </p>
           </CardContent>
         </Card>
@@ -68,7 +93,7 @@ export default async function ToplantilarPage() {
                         {toplanti.baslik}
                         {isFuture && (
                           <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            Yaklaşan
+                            {t.meetings.upcoming}
                           </Badge>
                         )}
                       </CardTitle>
@@ -78,7 +103,7 @@ export default async function ToplantilarPage() {
                           {formatTarih(toplanti.tarih)}
                         </span>
                         <span>
-                          Oluşturan: {toplanti.createdBy.ad} {toplanti.createdBy.soyad}
+                          {toplanti.createdBy.ad} {toplanti.createdBy.soyad}
                         </span>
                       </CardDescription>
                     </div>
@@ -93,13 +118,13 @@ export default async function ToplantilarPage() {
                       href={`/toplantilar/${toplanti.id}`}
                       className="text-sm text-primary hover:underline"
                     >
-                      Devamını Oku
+                      {t.common.view}
                     </Link>
                   )}
                   {toplanti.katilimcilar && (
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground pt-2 border-t">
                       <Users className="h-3.5 w-3.5" />
-                      <span>Katılımcılar: {toplanti.katilimcilar}</span>
+                      <span>{t.meetings.participants}: {toplanti.katilimcilar}</span>
                     </div>
                   )}
                 </CardContent>

@@ -8,7 +8,10 @@ import { NAV_ITEMS } from "@/lib/constants";
 import {
   LayoutDashboard, Receipt, Wallet, CreditCard, BarChart3,
   Users, Vote, Megaphone, UserCog, Settings, LogOut, Building2, CalendarCheck,
-  BookOpen, Wrench, ClipboardCheck, MessageCircle,
+  BookOpen, Wrench, ClipboardCheck, MessageCircle, ShieldAlert,
+  Gauge, UserCheck, Car, PawPrint, FolderOpen, Phone, Siren,
+  Package, ClipboardList, Calendar, Scale,
+  FileText, Sparkles, MessageSquareWarning, PackageCheck, Shield, Truck, ShieldCheck, Camera, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/context";
@@ -16,7 +19,10 @@ import { useTranslation } from "@/lib/i18n/context";
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Receipt, Wallet, CreditCard, BarChart3,
   Users, Vote, Megaphone, UserCog, Settings, CalendarCheck,
-  BookOpen, Wrench, ClipboardCheck, MessageCircle,
+  BookOpen, Wrench, ClipboardCheck, MessageCircle, ShieldAlert,
+  Gauge, UserCheck, Car, PawPrint, FolderOpen, Phone, Siren,
+  Package, ClipboardList, Calendar, Scale,
+  FileText, Sparkles, MessageSquareWarning, PackageCheck, Shield, Truck, ShieldCheck, Camera, Zap,
 };
 
 export function Sidebar() {
@@ -89,6 +95,14 @@ export function Sidebar() {
           <LogOut className="w-4 h-4 mr-2" />
           {t.auth.logout}
         </Button>
+        <a
+          href="https://velarisdijital.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center text-[10px] text-gray-400 dark:text-gray-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors mt-2"
+        >
+          Velaris Dijital
+        </a>
       </div>
     </aside>
   );

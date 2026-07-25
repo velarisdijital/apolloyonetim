@@ -11,10 +11,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const ay = searchParams.get("ay");
   const yil = searchParams.get("yil");
+  const ortakAlanId = searchParams.get("ortakAlanId");
 
   const where: Record<string, unknown> = {
     buildingId: session.user.buildingId!,
   };
+
+  if (ortakAlanId) {
+    where.ortakAlanId = ortakAlanId;
+  }
 
   if (ay && yil) {
     const start = new Date(Date.UTC(Number(yil), Number(ay) - 1, 1));
@@ -27,6 +32,7 @@ export async function GET(req: NextRequest) {
     orderBy: [{ tarih: "asc" }, { baslangicSaati: "asc" }],
     include: {
       user: { select: { id: true, ad: true, soyad: true } },
+      ortakAlan: { select: { id: true, ad: true } },
     },
   });
 
@@ -43,13 +49,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ errors: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { tarih, baslangicSaati, bitisSaati, aciklama } = parsed.data;
+  const { tarih, baslangicSaati, bitisSaati, aciklama, ortakAlanId } = parsed.data;
 
-  if (bitisSaati - baslangicSaati > 3) {
-    return NextResponse.json({ error: "Maksimum 3 saat rezervasyon yapılabilir" }, { status: 400 });
+  let maxSure = 3;
+  let kapanisSaati = 22;
+
+  if (ortakAlanId) {
+    const alan = await prisma.ortakAlan.findUnique({ where: { id: ortakAlanId } });
+    if (alan) {
+      maxSure = alan.maxSure;
+      kapanisSaati = alan.kapanisSaati;
+    }
   }
-  if (bitisSaati > 22) {
-    return NextResponse.json({ error: "Barbekü alanı 22:00'ye kadar açıktır" }, { status: 400 });
+
+  if (bitisSaati - baslangicSaati > maxSure) {
+    return NextResponse.json({ error: `Maksimum ${maxSure} saat rezervasyon yapılabilir` }, { status: 400 });
+  }
+  if (bitisSaati > kapanisSaati) {
+    return NextResponse.json({ error: `Alan ${kapanisSaati}:00'e kadar açıktır` }, { status: 400 });
   }
   if (bitisSaati <= baslangicSaati) {
     return NextResponse.json({ error: "Bitiş saati başlangıçtan sonra olmalıdır" }, { status: 400 });
@@ -57,15 +74,19 @@ export async function POST(req: NextRequest) {
 
   const rezervasyonTarihi = new Date(tarih + "T12:00:00Z");
 
-  const existing = await prisma.reservation.findFirst({
-    where: {
-      buildingId: session.user.buildingId!,
-      tarih: rezervasyonTarihi,
-      OR: [
-        { baslangicSaati: { lt: bitisSaati }, bitisSaati: { gt: baslangicSaati } },
-      ],
-    },
-  });
+  const conflictWhere: Record<string, unknown> = {
+    buildingId: session.user.buildingId!,
+    tarih: rezervasyonTarihi,
+    OR: [
+      { baslangicSaati: { lt: bitisSaati }, bitisSaati: { gt: baslangicSaati } },
+    ],
+  };
+
+  if (ortakAlanId) {
+    conflictWhere.ortakAlanId = ortakAlanId;
+  }
+
+  const existing = await prisma.reservation.findFirst({ where: conflictWhere });
 
   if (existing) {
     return NextResponse.json({ error: "Bu zaman diliminde başka bir rezervasyon var" }, { status: 409 });
@@ -77,11 +98,13 @@ export async function POST(req: NextRequest) {
       baslangicSaati,
       bitisSaati,
       aciklama: aciklama || null,
+      ortakAlanId: ortakAlanId || null,
       buildingId: session.user.buildingId!,
       userId: session.user.id,
     },
     include: {
       user: { select: { id: true, ad: true, soyad: true } },
+      ortakAlan: { select: { id: true, ad: true } },
     },
   });
 

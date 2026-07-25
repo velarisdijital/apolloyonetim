@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { BookOpen, Plus, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface Kural {
   id: string;
@@ -42,17 +43,9 @@ const KATEGORI_RENKLERI: Record<string, string> = {
   ORTAK_ALAN: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
-const KATEGORI_LABELS: Record<string, string> = {
-  GENEL: "Genel",
-  GUVENLIK: "Güvenlik",
-  TEMIZLIK: "Temizlik",
-  GURULTU: "Gürültü",
-  OTOPARK: "Otopark",
-  ORTAK_ALAN: "Ortak Alan",
-};
-
 export default function KurallarPage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [kurallar, setKurallar] = useState<Kural[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,7 +72,7 @@ export default function KurallarPage() {
 
   const handleCreate = async () => {
     if (!baslik.trim() || !icerik.trim()) {
-      toast.error("Başlık ve içerik gereklidir");
+      toast.error(t.common.required);
       return;
     }
     setSubmitting(true);
@@ -90,14 +83,14 @@ export default function KurallarPage() {
         body: JSON.stringify({ baslik, icerik, kategori }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Kural eklendi");
+      toast.success(t.common.success);
       setDialogOpen(false);
       setBaslik("");
       setIcerik("");
       setKategori("GENEL");
       await fetchKurallar();
     } catch {
-      toast.error("Kural eklenemedi");
+      toast.error(t.common.error);
     } finally {
       setSubmitting(false);
     }
@@ -107,11 +100,11 @@ export default function KurallarPage() {
     try {
       const res = await fetch(`/api/kurallar?id=${id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("Kural silindi");
+        toast.success(t.common.success);
         await fetchKurallar();
       }
     } catch {
-      toast.error("Kural silinemedi");
+      toast.error(t.common.error);
     }
   };
 
@@ -123,32 +116,32 @@ export default function KurallarPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-blue-600" />
-            Bina Kuralları
+            {t.rules.title}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Bina kuralları ve yönetmelikleri
+            {t.rules.subtitle}
           </p>
         </div>
         {isYonetici && (
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            Kural Ekle
+            {t.rules.addNew}
           </Button>
         )}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Yükleniyor...</div>
+          <div className="text-gray-500">{t.common.loading}</div>
         </div>
       ) : kurallar.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
-            <p className="text-lg font-medium text-gray-500">Henüz kural eklenmemiş</p>
+            <p className="text-lg font-medium text-gray-500">{t.rules.noRules}</p>
             {isYonetici && (
               <p className="text-sm text-gray-400 mt-1">
-                Bina kurallarını eklemek için yukarıdaki butona tıklayın
+                {t.rules.addHint}
               </p>
             )}
           </CardContent>
@@ -167,7 +160,7 @@ export default function KurallarPage() {
                       <CardTitle className="text-base flex items-center gap-2">
                         {kural.baslik}
                         <Badge className={KATEGORI_RENKLERI[kural.kategori] || KATEGORI_RENKLERI.GENEL}>
-                          {KATEGORI_LABELS[kural.kategori] || kural.kategori}
+                          {t.rules.categories[kural.kategori as keyof typeof t.rules.categories] || kural.kategori}
                         </Badge>
                       </CardTitle>
                     </div>
@@ -189,7 +182,7 @@ export default function KurallarPage() {
                   {kural.icerik}
                 </p>
                 <p className="text-xs text-gray-400 mt-3">
-                  Ekleyen: {kural.createdBy.ad} {kural.createdBy.soyad}
+                  {t.rules.addedBy}: {kural.createdBy.ad} {kural.createdBy.soyad}
                 </p>
               </CardContent>
             </Card>
@@ -200,37 +193,37 @@ export default function KurallarPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Yeni Kural Ekle</DialogTitle>
+            <DialogTitle>{t.rules.addTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Başlık</Label>
+              <Label>{t.rules.ruleTitle}</Label>
               <Input
-                placeholder="Örn: Gürültü kuralları"
+                placeholder={t.rules.ruleTitlePlaceholder}
                 value={baslik}
                 onChange={(e) => setBaslik(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Kategori</Label>
+              <Label>{t.common.category}</Label>
               <Select value={kategori} onValueChange={(v) => v && setKategori(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(KATEGORI_LABELS).map(([key, label]) => (
+                  {Object.keys(KATEGORI_RENKLERI).map((key) => (
                     <SelectItem key={key} value={key}>
-                      {label}
+                      {t.rules.categories[key as keyof typeof t.rules.categories] || key}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>İçerik</Label>
+              <Label>{t.rules.ruleContent}</Label>
               <textarea
                 className="w-full min-h-[120px] rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Kural detaylarını yazın..."
+                placeholder={t.rules.ruleContentPlaceholder}
                 value={icerik}
                 onChange={(e) => setIcerik(e.target.value)}
               />
@@ -240,7 +233,7 @@ export default function KurallarPage() {
               onClick={handleCreate}
               disabled={submitting}
             >
-              {submitting ? "Kaydediliyor..." : "Kural Ekle"}
+              {submitting ? t.common.saving : t.rules.addNew}
             </Button>
           </div>
         </DialogContent>

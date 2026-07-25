@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Loader2 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function GirisPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export default function GirisPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("E-posta veya şifre hatalı");
+      setError(t.auth.loginError);
     } else {
       router.push("/panel");
       router.refresh();
@@ -47,29 +49,29 @@ export default function GirisPage() {
           <div>
             <CardTitle className="text-2xl font-bold">Apollo</CardTitle>
             <CardDescription className="mt-1">
-              Hesabınıza giriş yapın
+              {t.auth.loginTitle}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
+              <Label htmlFor="email">{t.auth.email}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="ornek@apartman.com"
+                placeholder={t.auth.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t.auth.passwordPlaceholder}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -82,10 +84,10 @@ export default function GirisPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Giriş yapılıyor...
+                  {t.common.loading}
                 </>
               ) : (
-                "Giriş Yap"
+                t.auth.login
               )}
             </Button>
           </form>

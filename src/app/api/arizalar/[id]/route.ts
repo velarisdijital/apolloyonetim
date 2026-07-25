@@ -29,12 +29,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Yetkiniz yok" }, { status: 403 });
   }
 
+  const updateData: Record<string, unknown> = {};
+  if (body.durum) updateData.durum = body.durum;
+  if (body.yanit !== undefined) updateData.yanit = body.yanit;
+  if (body.tahminiMaliyet !== undefined) updateData.tahminiMaliyet = body.tahminiMaliyet;
+
   const updated = await prisma.arizaBildirimi.update({
     where: { id },
-    data: {
-      durum: body.durum,
-      yanit: body.yanit,
-    },
+    data: updateData,
   });
 
   return NextResponse.json(updated);

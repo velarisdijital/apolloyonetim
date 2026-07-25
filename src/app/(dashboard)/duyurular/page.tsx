@@ -1,7 +1,7 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { formatTarih } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,46 +9,64 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Megaphone, Plus, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/context";
 
-export default async function DuyurularPage() {
-  const session = await getServerSession(authOptions);
+interface Duyuru {
+  id: string;
+  baslik: string;
+  icerik: string;
+  onemli: boolean;
+  createdAt: string;
+  createdBy: { ad: string; soyad: string };
+}
 
-  if (!session?.user?.buildingId) {
-    redirect("/");
+export default function DuyurularPage() {
+  const { data: session } = useSession();
+  const { t } = useTranslation();
+  const [duyurular, setDuyurular] = useState<Duyuru[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDuyurular = async () => {
+      try {
+        const res = await fetch("/api/duyurular");
+        if (res.ok) {
+          const data = await res.json();
+          setDuyurular(data);
+        }
+      } catch (error) {
+        console.error("Duyurular yüklenirken hata:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDuyurular();
+  }, []);
+
+  const userRole = (session?.user as { rol?: string })?.rol;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">{t.common.loading}</p>
+      </div>
+    );
   }
-
-  const duyurular = await prisma.announcement.findMany({
-    where: {
-      buildingId: session.user.buildingId,
-    },
-    orderBy: [
-      { onemli: "desc" },
-      { createdAt: "desc" },
-    ],
-    include: {
-      createdBy: {
-        select: {
-          ad: true,
-          soyad: true,
-        },
-      },
-    },
-  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Duyurular</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.announcements.title}</h1>
           <p className="text-muted-foreground">
-            Bina duyuruları ve bilgilendirmeler
+            {t.announcements.subtitle}
           </p>
         </div>
-        {session.user.rol === "MASTER_ADMIN" && (
+        {userRole === "MASTER_ADMIN" && (
           <Link href="/duyurular/ekle">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Duyuru
+              {t.announcements.addNew}
             </Button>
           </Link>
         )}
@@ -61,7 +79,7 @@ export default async function DuyurularPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Megaphone className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium text-muted-foreground">
-              Henüz duyuru yok
+              {t.announcements.noAnnouncements}
             </p>
           </CardContent>
         </Card>
@@ -85,7 +103,7 @@ export default async function DuyurularPage() {
                     {duyuru.baslik}
                   </CardTitle>
                   {duyuru.onemli && (
-                    <Badge variant="destructive">Önemli</Badge>
+                    <Badge variant="destructive">{t.announcements.important}</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

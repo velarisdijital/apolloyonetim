@@ -33,6 +33,7 @@ export const authOptions: NextAuthOptions = {
           rol: user.rol,
           buildingId: user.buildingId,
           apartmentId: user.apartmentId,
+          locale: user.locale ?? undefined,
         };
       },
     }),
@@ -46,6 +47,7 @@ export const authOptions: NextAuthOptions = {
         token.apartmentId = user.apartmentId;
         token.ad = user.ad;
         token.soyad = user.soyad;
+        token.locale = user.locale;
       }
       return token;
     },
@@ -57,6 +59,7 @@ export const authOptions: NextAuthOptions = {
         session.user.apartmentId = token.apartmentId as string | null;
         session.user.ad = token.ad as string;
         session.user.soyad = token.soyad as string;
+        session.user.locale = token.locale as string | undefined;
       }
       return session;
     },

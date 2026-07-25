@@ -6,12 +6,14 @@ import path from "path";
 import { nanoid } from "nanoid";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
   "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 export async function POST(req: NextRequest) {
@@ -29,14 +31,14 @@ export async function POST(req: NextRequest) {
 
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
-      { error: "Dosya 5MB'dan büyük olamaz" },
+      { error: "Dosya 10MB'dan buyuk olamaz" },
       { status: 400 }
     );
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
     return NextResponse.json(
-      { error: "Geçersiz dosya tipi. JPEG, PNG, WebP veya PDF yükleyin." },
+      { error: "Gecersiz dosya tipi. JPEG, PNG, WebP, PDF, DOC veya DOCX yukleyin." },
       { status: 400 }
     );
   }

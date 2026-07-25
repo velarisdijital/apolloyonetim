@@ -1,9 +1,9 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { formatTarihKisa, formatPara } from "@/lib/format";
-import { KATEGORI_LABELS } from "@/lib/constants";
 import {
   Card,
   CardContent,
@@ -22,55 +22,77 @@ import { Plus, Receipt } from "lucide-react";
 import Link from "next/link";
 import { GiderFilters } from "./filters";
 import { ReceiptViewer } from "@/components/giderler/receipt-viewer";
+import { useTranslation } from "@/lib/i18n/context";
 
-interface PageProps {
-  searchParams: Promise<{
-    kategori?: string;
-    baslangic?: string;
-    bitis?: string;
-  }>;
+interface Gider {
+  id: string;
+  kategori: string;
+  aciklama: string;
+  tutar: number;
+  tarih: string;
+  fisYolu: string | null;
+  fisAdi: string | null;
+  onayDurumu: string;
+  createdBy: { ad: string; soyad: string };
 }
 
-export default async function GiderlerPage({ searchParams }: PageProps) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.buildingId) redirect("/giris");
+export default function GiderlerPage() {
+  const { data: session } = useSession();
+  const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const [giderler, setGiderler] = useState<Gider[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const params = await searchParams;
-  const { kategori, baslangic, bitis } = params;
+  const fetchGiderler = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      const kategori = searchParams.get("kategori");
+      const baslangic = searchParams.get("baslangic");
+      const bitis = searchParams.get("bitis");
+      if (kategori && kategori !== "TUMU") params.set("kategori", kategori);
+      if (baslangic) params.set("baslangic", baslangic);
+      if (bitis) params.set("bitis", bitis);
+      const res = await fetch(`/api/giderler?${params.toString()}`);
+      if (res.ok) setGiderler(await res.json());
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams]);
 
-  const where: Record<string, unknown> = {
-    buildingId: session.user.buildingId,
+  useEffect(() => {
+    fetchGiderler();
+  }, [fetchGiderler]);
+
+  const canAdd = session?.user?.rol && ["MASTER_ADMIN", "KAPICI"].includes(session.user.rol);
+
+  const categoryLabel = (kategori: string) => {
+    return t.categories[kategori as keyof typeof t.categories] || kategori;
   };
-  if (kategori && kategori !== "TUMU") where.kategori = kategori;
-  if (baslangic && bitis) {
-    where.tarih = { gte: new Date(baslangic), lte: new Date(bitis) };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">{t.common.loading}</div>
+      </div>
+    );
   }
-
-  if (!["MASTER_ADMIN", "DENETCI"].includes(session.user.rol)) {
-    where.onayDurumu = "ONAYLANDI";
-  }
-
-  const giderler = await prisma.expense.findMany({
-    where,
-    orderBy: { tarih: "desc" },
-    include: { createdBy: { select: { ad: true, soyad: true } } },
-  });
-
-  const canAdd = ["MASTER_ADMIN", "KAPICI"].includes(session.user.rol);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Giderler</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.expenses.title}</h1>
           <p className="text-muted-foreground">
-            Bina giderlerini görüntüleyin ve yönetin
+            {t.expenses.subtitle}
           </p>
         </div>
         {canAdd && (
           <Button render={<Link href="/giderler/ekle" />}>
               <Plus className="mr-2 size-4" />
-              Gider Ekle
+              {t.expenses.addExpense}
           </Button>
         )}
       </div>
@@ -83,12 +105,12 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tarih</TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead>Açıklama</TableHead>
-                <TableHead className="text-right">Tutar</TableHead>
-                <TableHead>Ekleyen</TableHead>
-                <TableHead>Fis</TableHead>
+                <TableHead>{t.expenses.date}</TableHead>
+                <TableHead>{t.expenses.category}</TableHead>
+                <TableHead>{t.expenses.description}</TableHead>
+                <TableHead className="text-right">{t.expenses.amount}</TableHead>
+                <TableHead>{t.expenses.addedBy}</TableHead>
+                <TableHead>{t.expenses.receipt}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -96,7 +118,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                     <Receipt className="mx-auto mb-2 size-8 opacity-50" />
-                    Kayıtlı gider bulunamadı
+                    {t.expenses.noExpenses}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -107,7 +129,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {KATEGORI_LABELS[gider.kategori] || gider.kategori}
+                        {categoryLabel(gider.kategori)}
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
@@ -123,7 +145,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
                       {gider.fisYolu ? (
                         <ReceiptViewer
                           fisYolu={gider.fisYolu}
-                          fisAdi={gider.fisAdi || "Fis"}
+                          fisAdi={gider.fisAdi || t.expenses.receipt}
                         />
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -143,7 +165,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
           <Card>
             <CardContent className="flex flex-col items-center py-8 text-muted-foreground">
               <Receipt className="mb-2 size-8 opacity-50" />
-              Kayıtlı gider bulunamadı
+              {t.expenses.noExpenses}
             </CardContent>
           </Card>
         ) : (
@@ -154,7 +176,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="shrink-0">
-                        {KATEGORI_LABELS[gider.kategori] || gider.kategori}
+                        {categoryLabel(gider.kategori)}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {formatTarihKisa(gider.tarih)}
@@ -174,7 +196,7 @@ export default async function GiderlerPage({ searchParams }: PageProps) {
                     {gider.fisYolu && (
                       <ReceiptViewer
                         fisYolu={gider.fisYolu}
-                        fisAdi={gider.fisAdi || "Fis"}
+                        fisAdi={gider.fisAdi || t.expenses.receipt}
                       />
                     )}
                   </div>

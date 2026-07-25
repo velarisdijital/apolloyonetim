@@ -8,6 +8,7 @@ declare module "next-auth" {
     apartmentId: string | null;
     ad: string;
     soyad: string;
+    locale?: string;
   }
 
   interface Session {
@@ -25,5 +26,6 @@ declare module "next-auth/jwt" {
     apartmentId: string | null;
     ad: string;
     soyad: string;
+    locale?: string;
   }
 }

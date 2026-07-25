@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { UserCog, Plus, Users, Search } from "lucide-react";
 import { ROL_LABELS } from "@/lib/constants";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface Apartment {
   id: string;
@@ -50,6 +51,7 @@ interface User {
 }
 
 export default function SakinlerPage() {
+  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -64,6 +66,7 @@ export default function SakinlerPage() {
   const [form, setForm] = useState({
     ad: "",
     soyad: "",
+    telefon: "",
     email: "",
     password: "",
     rol: "",
@@ -82,11 +85,11 @@ export default function SakinlerPage() {
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/kullanicilar");
-      if (!res.ok) throw new Error("Kullanıcılar yüklenemedi");
+      if (!res.ok) throw new Error(t.errors.generic);
       const data = await res.json();
       setUsers(data);
     } catch {
-      setError("Kullanıcılar yüklenirken bir hata oluştu.");
+      setError(t.errors.generic);
     } finally {
       setLoading(false);
     }
@@ -121,6 +124,7 @@ export default function SakinlerPage() {
       const body: Record<string, string> = {
         ad: form.ad,
         soyad: form.soyad,
+        telefon: form.telefon,
         email: form.email,
         password: form.password,
         rol: form.rol,
@@ -137,14 +141,14 @@ export default function SakinlerPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Kullanıcı eklenemedi");
+        throw new Error(data?.error || t.errors.generic);
       }
 
-      setForm({ ad: "", soyad: "", email: "", password: "", rol: "", apartmentId: "" });
+      setForm({ ad: "", soyad: "", telefon: "", email: "", password: "", rol: "", apartmentId: "" });
       setDialogOpen(false);
       await fetchUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+      setError(err instanceof Error ? err.message : t.errors.generic);
     } finally {
       setSubmitting(false);
     }
@@ -154,12 +158,12 @@ export default function SakinlerPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Sakinler</h1>
-          <p className="text-muted-foreground">Bina sakinleri yönetimi</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t.residents.title}</h1>
+          <p className="text-muted-foreground">{t.residents.subtitle}</p>
         </div>
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">Yükleniyor...</div>
+            <div className="text-muted-foreground">{t.common.loading}</div>
           </CardContent>
         </Card>
       </div>
@@ -185,21 +189,21 @@ export default function SakinlerPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Sakinler</h1>
-          <p className="text-muted-foreground">Bina sakinleri yönetimi</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t.residents.title}</h1>
+          <p className="text-muted-foreground">{t.residents.subtitle}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger render={<Button />}>
               <Plus className="mr-2 size-4" />
-              Yeni Kullanıcı Ekle
+              {t.residents.addNew}
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Yeni Kullanıcı Ekle</DialogTitle>
+              <DialogTitle>{t.residents.addTitle}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="ad">Ad</Label>
+                <Label htmlFor="ad">{t.residents.name}</Label>
                 <Input
                   id="ad"
                   value={form.ad}
@@ -208,7 +212,7 @@ export default function SakinlerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="soyad">Soyad</Label>
+                <Label htmlFor="soyad">{t.residents.surname}</Label>
                 <Input
                   id="soyad"
                   value={form.soyad}
@@ -217,7 +221,16 @@ export default function SakinlerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-posta</Label>
+                <Label htmlFor="telefon">{t.residents.phone}</Label>
+                <Input
+                  id="telefon"
+                  type="tel"
+                  value={form.telefon}
+                  onChange={(e) => setForm({ ...form, telefon: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t.residents.email}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -227,7 +240,7 @@ export default function SakinlerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Şifre</Label>
+                <Label htmlFor="password">{t.auth.password}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -237,13 +250,13 @@ export default function SakinlerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rol">Rol</Label>
+                <Label htmlFor="rol">{t.residents.role}</Label>
                 <Select
                   value={form.rol}
                   onValueChange={(value) => setForm({ ...form, rol: value || "" })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Rol seçin" />
+                    <SelectValue placeholder={t.residents.selectRole} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(ROL_LABELS).map(([key, label]) => (
@@ -255,13 +268,13 @@ export default function SakinlerPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="apartment">Daire</Label>
+                <Label htmlFor="apartment">{t.residents.apartment}</Label>
                 <Select
                   value={form.apartmentId}
                   onValueChange={(value) => setForm({ ...form, apartmentId: value || "" })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Daire seçin (opsiyonel)" />
+                    <SelectValue placeholder={t.residents.selectApartment} />
                   </SelectTrigger>
                   <SelectContent>
                     {apartments.map((apt) => (
@@ -280,7 +293,7 @@ export default function SakinlerPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Kaydediliyor..." : "Kaydet"}
+                {submitting ? t.common.saving : t.common.save}
               </Button>
             </form>
           </DialogContent>
@@ -292,12 +305,12 @@ export default function SakinlerPage() {
           <div className="flex items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
               <UserCog className="size-5" />
-              Kullanıcı Listesi
+              {t.residents.userList}
             </CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Ad, e-posta veya daire ara..."
+                placeholder={t.residents.searchPlaceholder}
                 value={arama}
                 onChange={(e) => setArama(e.target.value)}
                 className="pl-9"
@@ -310,10 +323,10 @@ export default function SakinlerPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Users className="mb-4 size-12 text-muted-foreground" />
               <p className="text-lg font-medium text-muted-foreground">
-                Henüz kullanıcı yok
+                {t.residents.noResidents}
               </p>
               <p className="text-sm text-muted-foreground">
-                Yeni kullanıcı ekleyerek başlayın.
+                {t.residents.addHint}
               </p>
             </div>
           ) : (
@@ -321,12 +334,12 @@ export default function SakinlerPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Ad Soyad</TableHead>
-                    <TableHead>E-posta</TableHead>
-                    <TableHead>Rol</TableHead>
-                    <TableHead>Daire</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>Durum</TableHead>
+                    <TableHead>{t.residents.fullName}</TableHead>
+                    <TableHead>{t.residents.email}</TableHead>
+                    <TableHead>{t.residents.role}</TableHead>
+                    <TableHead>{t.residents.apartment}</TableHead>
+                    <TableHead>{t.residents.phone}</TableHead>
+                    <TableHead>{t.residents.status}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -352,7 +365,7 @@ export default function SakinlerPage() {
                               : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-200"
                           }
                         >
-                          {user.aktif ? "Aktif" : "Pasif"}
+                          {user.aktif ? t.residents.active : t.residents.inactive}
                         </Badge>
                       </TableCell>
                     </TableRow>

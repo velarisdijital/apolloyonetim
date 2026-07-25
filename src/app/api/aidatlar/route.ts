@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { aidatSchema } from "@/lib/validations";
 import { createBuildingNotification } from "@/lib/notifications";
 
@@ -9,6 +10,18 @@ import { createBuildingNotification } from "@/lib/notifications";
 export async function GET(_req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+
+  // Bug 2 fix: Mark overdue unpaid items as GECIKTI before fetching
+  await prisma.duesItem.updateMany({
+    where: {
+      durum: 'ODENMEDI',
+      dues: {
+        sonOdemeTarihi: { lt: new Date() },
+        buildingId: session.user.buildingId!,
+      },
+    },
+    data: { durum: 'GECIKTI' },
+  });
 
   const aidatlar = await prisma.dues.findMany({
     where: { buildingId: session.user.buildingId! },
@@ -45,22 +58,36 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
-  const aidat = await prisma.dues.create({
-    data: {
-      ay: parsed.data.ay,
-      yil: parsed.data.yil,
-      tutarKisi: parsed.data.tutarKisi,
-      aciklama: parsed.data.aciklama,
-      sonOdemeTarihi: new Date(parsed.data.sonOdemeTarihi),
-      buildingId: session.user.buildingId!,
-      items: {
-        create: apartments.map((apt) => ({
-          apartmentId: apt.id,
-        })),
+  let aidat;
+  try {
+    aidat = await prisma.dues.create({
+      data: {
+        ay: parsed.data.ay,
+        yil: parsed.data.yil,
+        tutarKisi: parsed.data.tutarKisi,
+        aciklama: parsed.data.aciklama,
+        sonOdemeTarihi: new Date(parsed.data.sonOdemeTarihi),
+        buildingId: session.user.buildingId!,
+        items: {
+          create: apartments.map((apt) => ({
+            apartmentId: apt.id,
+          })),
+        },
       },
-    },
-    include: { items: true },
-  });
+      include: { items: true },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Bu ay ve yıl için zaten bir aidat tanımlanmış." },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 
   await createBuildingNotification(
     session.user.buildingId!,
