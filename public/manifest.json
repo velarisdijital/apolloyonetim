@@ -1,5 +1,5 @@
 {
-  "name": "Apollo Yönetim Sistemi",
+  "name": "Apollo Apartman Yönetim Sistemi",
   "short_name": "Apollo",
   "description": "Profesyonel bina ve apartman yönetim uygulaması",
   "start_url": "/panel",
@@ -9,6 +9,36 @@
   "orientation": "portrait-primary",
   "categories": ["business", "utilities"],
   "lang": "tr",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Panel",
+      "short_name": "Panel",
+      "url": "/panel",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Bildirimler",
+      "short_name": "Bildirim",
+      "url": "/bildirimler",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Giderler",
+      "short_name": "Giderler",
+      "url": "/giderler",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Aidatlar",
+      "short_name": "Aidatlar",
+      "url": "/aidatlar",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",

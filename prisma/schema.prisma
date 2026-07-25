@@ -155,7 +155,8 @@ model User {
   payments          Payment[]
   approvedPayments  Payment[]       @relation("PaymentApprover")
   votes             Vote[]
-  notifications Notification[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
   meetings      Meeting[]       @relation("MeetingCreator")
   announcements Announcement[]
   reservations  Reservation[]
@@ -1299,4 +1300,21 @@ model BinaFotograf {
   building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
 
   @@index([buildingId, kategori])
+}
+
+// ==========================================
+// PUSH BİLDİRİM ABONELİKLERİ
+// ==========================================
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

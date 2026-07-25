@@ -5,7 +5,7 @@ import AuthProvider from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { I18nProvider } from "@/lib/i18n/context";
 import { Toaster } from "@/components/ui/sonner";
-import { ServiceWorkerRegister } from "@/components/providers/sw-register";
+import { ServiceWorkerRegister, InstallPrompt, PushNotificationPrompt } from "@/components/providers/sw-register";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,6 +40,8 @@ export default function RootLayout({
               {children}
               <Toaster position="top-right" richColors />
               <ServiceWorkerRegister />
+              <InstallPrompt />
+              <PushNotificationPrompt />
             </I18nProvider>
           </ThemeProvider>
         </AuthProvider>
