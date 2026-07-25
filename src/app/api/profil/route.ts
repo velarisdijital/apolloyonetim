@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/mobile-auth";
 
@@ -32,11 +30,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(dbUser);
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getUser(req);
 
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -47,7 +45,7 @@ export async function PUT(req: Request) {
     const { ad, soyad, telefon, locale } = body;
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: {
         ad,
         soyad,
