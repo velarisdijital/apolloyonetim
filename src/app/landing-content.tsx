@@ -610,8 +610,28 @@ export default function LandingContent() {
       if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
     }
     function applyMode() {
-      if (MQLS.some((m) => m.matches)) { disableScrub(); stage!.classList.add("static-mode"); }
-      else { stage!.classList.remove("static-mode"); enableScrub(); }
+      const gated = MQLS.some((m) => m.matches);
+      const reduced = MQLS[4].matches; // GATES[4] = reduced-motion
+      if (gated) {
+        disableScrub();
+        stage!.classList.add("static-mode");
+        if (!reduced) {
+          // Mobile / touch: play the hero as a muted autoplay loop instead of scrubbing.
+          if (!video!.src || video!.src.startsWith("blob:")) video!.src = HERO_VIDEO;
+          video!.loop = true; video!.muted = true; video!.playsInline = true;
+          stage!.classList.add("has-static-video");
+          const showAndPlay = () => { stage!.classList.add("video-ready"); video!.play().catch(() => {}); };
+          if (video!.readyState >= 2) showAndPlay();
+          else { video!.load(); video!.addEventListener("loadeddata", showAndPlay, { once: true }); }
+        } else {
+          stage!.classList.remove("has-static-video");
+          try { video!.pause(); } catch { /* noop */ }
+        }
+      } else {
+        stage!.classList.remove("static-mode", "has-static-video");
+        video!.loop = false;
+        enableScrub();
+      }
     }
 
     const io = new IntersectionObserver(([e]) => {
@@ -1006,7 +1026,9 @@ const CSS = `
 .hero-stage.static-mode .band,.hero-stage.static-mode .settle,.hero-stage.static-mode .rail,
 .hero-stage.static-mode>.hero-kicker,.hero-stage.static-mode .scroll-hint{display:none}
 .hero-stage.static-mode .static-hero,.static-hero.force{display:flex}
-.hero-stage.static-mode .hero-video{display:none}
+/* Mobile: hero plays as an autoplay loop; reduced-motion falls back to the poster. */
+.hero-stage.static-mode.has-static-video .hero-video{display:block;opacity:1;transition:none}
+.hero-stage.static-mode:not(.has-static-video) .hero-video{display:none}
 
 .scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:4;
   display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-2);font-family:var(--font-m);
