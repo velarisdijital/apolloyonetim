@@ -30,7 +30,7 @@ import {
   MessageCircle, ClipboardList, Wrench, CalendarCheck, Scale, Package, Sparkles,
   UserCheck, Car, ShieldCheck, Siren, Camera, PackageCheck, MessageSquareWarning,
   PawPrint, BookOpen, ShieldAlert, FileText, Shield, Truck, Zap, FolderOpen, Phone,
-  Calendar, Gauge, Building2, Globe, Server, Smartphone, LayoutGrid, ArrowRight,
+  Calendar, Gauge, Building2, Server, Smartphone, LayoutGrid, ArrowRight,
   ChevronDown, Languages,
 } from "lucide-react";
 
