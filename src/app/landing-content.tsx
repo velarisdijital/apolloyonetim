@@ -497,11 +497,8 @@ export default function LandingContent() {
     const wrap = wrapRef.current, stage = stageRef.current, video = videoRef.current, rail = railRef.current;
     if (!wrap || !stage || !video) return;
 
+    // Scrub runs everywhere (incl. touch); only reduced-motion falls back to a static poster.
     const GATES = [
-      "(max-width: 820px)",
-      "(orientation: portrait) and (max-width: 1024px)",
-      "(orientation: portrait) and (pointer: coarse)",
-      "(orientation: landscape) and (pointer: coarse) and (max-height: 560px)",
       "(prefers-reduced-motion: reduce)",
     ];
     const MQLS = GATES.map((q) => window.matchMedia(q));
@@ -610,25 +607,13 @@ export default function LandingContent() {
       if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
     }
     function applyMode() {
-      const gated = MQLS.some((m) => m.matches);
-      const reduced = MQLS[4].matches; // GATES[4] = reduced-motion
-      if (gated) {
+      const reduced = MQLS.some((m) => m.matches); // only reduced-motion remains a gate
+      if (reduced) {
         disableScrub();
         stage!.classList.add("static-mode");
-        if (!reduced) {
-          // Mobile / touch: play the hero as a muted autoplay loop instead of scrubbing.
-          if (!video!.src || video!.src.startsWith("blob:")) video!.src = HERO_VIDEO;
-          video!.loop = true; video!.muted = true; video!.playsInline = true;
-          stage!.classList.add("has-static-video");
-          const showAndPlay = () => { stage!.classList.add("video-ready"); video!.play().catch(() => {}); };
-          if (video!.readyState >= 2) showAndPlay();
-          else { video!.load(); video!.addEventListener("loadeddata", showAndPlay, { once: true }); }
-        } else {
-          stage!.classList.remove("has-static-video");
-          try { video!.pause(); } catch { /* noop */ }
-        }
+        try { video!.pause(); } catch { /* noop */ }
       } else {
-        stage!.classList.remove("static-mode", "has-static-video");
+        stage!.classList.remove("static-mode");
         video!.loop = false;
         enableScrub();
       }
@@ -1144,8 +1129,8 @@ const CSS = `
   .diff-grid{grid-template-columns:1fr}
 }
 @media(max-width:820px){
-  .hero-wrap{height:100vh}
-  .hero-stage{position:relative}
+  .hero-wrap{height:320vh}
+  .rail{right:18px;height:38vh}
   .hd-link{display:none}
   .sec{padding:70px 0}
   .steps{grid-template-columns:1fr}
