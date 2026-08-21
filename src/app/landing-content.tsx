@@ -1004,8 +1004,8 @@ const CSS = `
 .before{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0}
 .before li{font-family:var(--font-m);font-size:13px;color:var(--text-3);margin:0 22px 6px 0;
   text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:1px}
-.after{font-family:var(--font-d);font-weight:700;font-size:clamp(21px,2.8vw,32px);color:var(--text);
-  text-transform:uppercase;letter-spacing:-.01em;max-width:24ch;margin:0;border-left:3px solid var(--accent);padding-left:22px}
+.after{font-family:var(--font-d);font-weight:700;font-size:clamp(21px,2.8vw,32px);color:var(--accent-2);
+  text-transform:uppercase;letter-spacing:-.01em;max-width:24ch;margin:0;border-top:1px solid var(--line);padding-top:26px}
 
 /* how — numbered rows */
 .steps{list-style:none;margin:56px 0 0;padding:0}
