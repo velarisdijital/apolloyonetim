@@ -764,20 +764,11 @@ export default function LandingContent() {
                   </div>
                   <ul className="pillar-feats">
                     {p.items.map((f, j) => (
-                      <li key={j}>
-                        <span className="pf-name">{f.name}</span>
-                        <span className="pf-desc">{f.desc}</span>
-                      </li>
+                      <li key={j}>{f.name}</li>
                     ))}
                   </ul>
                 </article>
               ))}
-            </div>
-            <div className="all-mods">
-              <span className="all-title">{t.pillars.allTitle}</span>
-              <p className="mod-line">
-                {t.pillars.items.flatMap((p) => p.items.map((f) => f.name)).join("  ·  ")}
-              </p>
             </div>
           </div>
         </section>
@@ -987,7 +978,7 @@ const CSS = `
 @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
 
 /* sections — editorial, hairline-ruled, sharp */
-.sec{position:relative;z-index:1;padding:104px 0;border-top:1px solid var(--line)}
+.sec{position:relative;z-index:1;padding:84px 0;border-top:1px solid var(--line)}
 .sec:first-of-type{border-top:0}
 .sec-head{max-width:60ch}
 .kicker{font-family:var(--font-m);font-size:12px;letter-spacing:.3em;color:var(--accent-2);display:block;margin-bottom:20px}
@@ -1026,14 +1017,8 @@ const CSS = `
 .pillar-t{font-family:var(--font-d);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:-.01em}
 .pillar-tag{font-size:13.5px;color:var(--text-2);margin-top:6px}
 .pillar-feats{list-style:none;margin:0;padding:0}
-.pillar-feats li{padding:11px 0;border-top:1px solid var(--line)}
-.pf-name{display:block;font-size:14px;font-weight:600;color:var(--text)}
-.pf-desc{display:block;font-size:12.5px;color:var(--text-3);line-height:1.45;margin-top:2px}
-
-.all-mods{margin-top:52px;border-top:1px solid var(--line);padding-top:28px;
-  display:grid;grid-template-columns:190px 1fr;gap:26px}
-.all-title{font-family:var(--font-m);font-size:12px;letter-spacing:.22em;color:var(--accent-2);text-transform:uppercase}
-.mod-line{font-size:13.5px;color:var(--text-3);line-height:1.95;margin:0}
+.pillar-feats li{padding:8px 0 8px 16px;border-top:1px solid var(--line);font-size:14px;color:var(--text-2);position:relative}
+.pillar-feats li::before{content:"";position:absolute;left:0;top:15px;width:5px;height:1px;background:var(--accent-2)}
 
 /* roles — masthead columns */
 .role-grid{margin-top:56px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line)}
@@ -1093,7 +1078,7 @@ const CSS = `
   .hero-wrap{height:320vh}
   .rail{right:18px;height:38vh}
   .hd-link{display:none}
-  .sec{padding:66px 0}
+  .sec{padding:56px 0}
   .step{column-gap:20px}
   .step .idx{font-size:42px}
   .pillar-grid,.role-grid{grid-template-columns:1fr}
