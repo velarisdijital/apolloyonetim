@@ -25,14 +25,7 @@ import Link from "next/link";
 import { Oswald, JetBrains_Mono, Inter } from "next/font/google";
 import { useTranslation } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/types";
-import {
-  Receipt, Wallet, BarChart3, ClipboardCheck, Settings, Megaphone, Vote, Users,
-  MessageCircle, ClipboardList, Wrench, CalendarCheck, Scale, Package, Sparkles,
-  UserCheck, Car, ShieldCheck, Siren, Camera, PackageCheck, MessageSquareWarning,
-  PawPrint, BookOpen, ShieldAlert, FileText, Shield, Truck, Zap, FolderOpen, Phone,
-  Calendar, Gauge, Building2, Server, Smartphone, LayoutGrid, ArrowRight,
-  ChevronDown, Languages,
-} from "lucide-react";
+import { Building2, ArrowRight, ChevronDown } from "lucide-react";
 
 const display = Oswald({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["500", "600", "700"], variable: "--font-display" });
 const mono = JetBrains_Mono({ subsets: ["latin", "latin-ext"], weight: ["500", "700"], variable: "--font-mono" });
@@ -44,19 +37,6 @@ const HERO_POSTER = "/hero/hero-poster.jpg";
 const LANDING_LOCALES: { code: Locale; label: string }[] = [
   { code: "tr", label: "TR" }, { code: "en", label: "EN" }, { code: "ru", label: "RU" },
 ];
-
-// Language-independent visual meta ------------------------------------------------
-const PILLAR_META = [
-  { icon: Wallet, tone: "amber", icons: [Receipt, Wallet, BarChart3, ClipboardCheck, Settings] },
-  { icon: Megaphone, tone: "sky", icons: [Megaphone, Vote, Users, MessageCircle, ClipboardList] },
-  { icon: Wrench, tone: "amber", icons: [Wrench, CalendarCheck, Scale, Package, Sparkles] },
-  { icon: ShieldCheck, tone: "sky", icons: [UserCheck, Car, ShieldCheck, Siren, Camera] },
-  { icon: PackageCheck, tone: "amber", icons: [PackageCheck, MessageSquareWarning, PawPrint, BookOpen, ShieldAlert] },
-  { icon: LayoutGrid, tone: "sky", icons: [FileText, Shield, Truck, Zap, FolderOpen, Phone, Calendar, Gauge] },
-];
-const STEP_ICONS = [Building2, Users, Wallet, ClipboardCheck, Sparkles];
-const DIFF_ICONS = [Languages, Server, Smartphone, LayoutGrid];
-const ROLE_ICONS = [Shield, Wrench, ClipboardCheck, Building2, Users];
 
 // Hero caption bands: range + entrance (copy from L.hero.bands) -------------------
 const BANDS = [
@@ -733,123 +713,107 @@ export default function LandingContent() {
         {/* PROBLEM */}
         <section className="sec problem reveal">
           <div className="wrap">
-            <span className="kicker">{t.problem.kicker}</span>
-            <h2 className="h2">{t.problem.title}</h2>
+            <div className="sec-head">
+              <span className="kicker">{t.problem.kicker}</span>
+              <h2 className="h2">{t.problem.title}</h2>
+            </div>
             <p className="lede">{t.problem.body}</p>
             <div className="before-after">
               <ul className="before">
                 {t.problem.before.map((b) => <li key={b}>{b}</li>)}
               </ul>
-              <div className="ba-arrow"><ArrowRight size={22} /></div>
-              <div className="after"><span className="after-dot" />{t.problem.after}</div>
+              <p className="after">{t.problem.after}</p>
             </div>
           </div>
         </section>
 
-        {/* HOW */}
+        {/* HOW — numbered editorial rows */}
         <section className="sec how reveal" id="how">
           <div className="wrap">
-            <span className="kicker">{t.how.kicker}</span>
-            <h2 className="h2">{t.how.title}</h2>
+            <div className="sec-head">
+              <span className="kicker">{t.how.kicker}</span>
+              <h2 className="h2">{t.how.title}</h2>
+            </div>
             <ol className="steps">
-              {t.how.steps.map((s, i) => {
-                const Icon = STEP_ICONS[i];
-                return (
-                  <li key={i} className="step">
-                    <div className="step-n">{String(i + 1).padStart(2, "0")}</div>
-                    <div className="step-ic"><Icon size={20} /></div>
-                    <h3 className="step-t">{s.title}</h3>
-                    <p className="step-d">{s.desc}</p>
-                  </li>
-                );
-              })}
+              {t.how.steps.map((s, i) => (
+                <li key={i} className="step">
+                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="step-t">{s.title}</h3>
+                  <p className="step-d">{s.desc}</p>
+                </li>
+              ))}
             </ol>
           </div>
         </section>
 
-        {/* PILLARS */}
+        {/* PILLARS — capability index */}
         <section className="sec pillars reveal">
           <div className="wrap">
-            <span className="kicker">{t.pillars.kicker}</span>
-            <h2 className="h2">{t.pillars.title}</h2>
-            <p className="lede">{t.pillars.sub}</p>
-            <div className="pillar-grid">
-              {t.pillars.items.map((p, i) => {
-                const meta = PILLAR_META[i];
-                const Icon = meta.icon;
-                return (
-                  <article key={i} className={`pillar tone-${meta.tone}`}>
-                    <div className="pillar-head">
-                      <span className="pillar-ic"><Icon size={20} /></span>
-                      <div>
-                        <h3 className="pillar-t">{p.title}</h3>
-                        <p className="pillar-tag">{p.tagline}</p>
-                      </div>
-                    </div>
-                    <ul className="pillar-feats">
-                      {p.items.map((f, j) => {
-                        const FIcon = meta.icons[j];
-                        return (
-                          <li key={j}>
-                            <FIcon size={15} className="pf-ic" />
-                            <span className="pf-name">{f.name}</span>
-                            <span className="pf-desc">{f.desc}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </article>
-                );
-              })}
+            <div className="sec-head">
+              <span className="kicker">{t.pillars.kicker}</span>
+              <h2 className="h2">{t.pillars.title}</h2>
+              <p className="lede">{t.pillars.sub}</p>
             </div>
-
-            {/* all modules strip */}
+            <div className="pillar-grid">
+              {t.pillars.items.map((p, i) => (
+                <article key={i} className="pillar">
+                  <div className="pillar-head">
+                    <span className="idx sm">{String(i + 1).padStart(2, "0")}</span>
+                    <h3 className="pillar-t">{p.title}</h3>
+                    <p className="pillar-tag">{p.tagline}</p>
+                  </div>
+                  <ul className="pillar-feats">
+                    {p.items.map((f, j) => (
+                      <li key={j}>
+                        <span className="pf-name">{f.name}</span>
+                        <span className="pf-desc">{f.desc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
             <div className="all-mods">
-              <h3 className="all-title">{t.pillars.allTitle}</h3>
-              <div className="mod-chips">
-                {t.pillars.items.flatMap((p, i) =>
-                  p.items.map((f, j) => {
-                    const FIcon = PILLAR_META[i].icons[j];
-                    return <span key={`${i}-${j}`} className="mod-chip"><FIcon size={13} />{f.name}</span>;
-                  })
-                )}
-              </div>
+              <span className="all-title">{t.pillars.allTitle}</span>
+              <p className="mod-line">
+                {t.pillars.items.flatMap((p) => p.items.map((f) => f.name)).join("  ·  ")}
+              </p>
             </div>
           </div>
         </section>
 
-        {/* ROLES */}
+        {/* ROLES — masthead row */}
         <section className="sec roles reveal">
           <div className="wrap">
-            <span className="kicker">{t.roles.kicker}</span>
-            <h2 className="h2">{t.roles.title}</h2>
-            <p className="lede">{t.roles.sub}</p>
+            <div className="sec-head">
+              <span className="kicker">{t.roles.kicker}</span>
+              <h2 className="h2">{t.roles.title}</h2>
+              <p className="lede">{t.roles.sub}</p>
+            </div>
             <div className="role-grid">
-              {t.roles.items.map((r, i) => {
-                const Icon = ROLE_ICONS[i];
-                return (
-                  <div key={i} className="role">
-                    <span className="role-ic"><Icon size={18} /></span>
-                    <h3 className="role-t">{r.role}</h3>
-                    <p className="role-d">{r.desc}</p>
-                  </div>
-                );
-              })}
+              {t.roles.items.map((r, i) => (
+                <div key={i} className="role">
+                  <span className="idx sm">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="role-t">{r.role}</h3>
+                  <p className="role-d">{r.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* DIFFERENTIATORS */}
+        {/* DIFFERENTIATORS — numbered claims */}
         <section className="sec diff reveal">
           <div className="wrap">
-            <span className="kicker">{t.diff.kicker}</span>
-            <h2 className="h2">{t.diff.title}</h2>
-            <div className="diff-grid">
-              {t.diff.items.map((d, i) => {
-                const Icon = DIFF_ICONS[i];
-                return (
-                  <article key={i} className={`diffcard${i === 0 ? " diff-hero" : ""}`}>
-                    <span className="diff-ic"><Icon size={22} /></span>
+            <div className="sec-head">
+              <span className="kicker">{t.diff.kicker}</span>
+              <h2 className="h2">{t.diff.title}</h2>
+            </div>
+            <div className="diff-list">
+              {t.diff.items.map((d, i) => (
+                <article key={i} className="diffrow">
+                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
+                  <div className="diff-body">
                     <h3 className="diff-t">{d.title}</h3>
                     <p className="diff-d">{d.desc}</p>
                     {i === 0 && (
@@ -857,22 +821,24 @@ export default function LandingContent() {
                         {LANGS.map((l) => <span key={l.name} title={l.name}>{l.flag}</span>)}
                       </div>
                     )}
-                  </article>
-                );
-              })}
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* FAQ — hairline rows */}
         <section className="sec faq reveal">
           <div className="wrap">
-            <span className="kicker">{t.faq.kicker}</span>
-            <h2 className="h2">{t.faq.title}</h2>
+            <div className="sec-head">
+              <span className="kicker">{t.faq.kicker}</span>
+              <h2 className="h2">{t.faq.title}</h2>
+            </div>
             <div className="faq-list">
               {t.faq.items.map((f, i) => (
                 <details key={i} className="faq-item">
-                  <summary>{f.q}<ChevronDown size={18} className="faq-chev" /></summary>
+                  <summary><span>{f.q}</span><ChevronDown size={18} className="faq-chev" /></summary>
                   <p>{f.a}</p>
                 </details>
               ))}
@@ -880,11 +846,11 @@ export default function LandingContent() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA — flat band over the ending frame */}
         <section className="sec cta-sec reveal">
-          <div className="wrap">
-            <div className="cta-card">
-              <span className="cta-glow" aria-hidden="true" />
+          <div className="cta-band" style={{ backgroundImage: `url(/hero/hero-end.jpg)` }}>
+            <div className="cta-scrim" aria-hidden="true" />
+            <div className="wrap cta-inner">
               <h2 className="cta-title">{t.cta.title}</h2>
               <p className="cta-sub">{t.cta.sub}</p>
               <Link href="/giris" className="btn btn-accent btn-lg">{t.cta.button}<ArrowRight size={18} /></Link>
@@ -939,22 +905,22 @@ const CSS = `
   backdrop-filter:blur(8px)}
 .hd-in{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:10px}
-.brand-mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#0b1220;
+.brand-mark{width:34px;height:34px;border-radius:5px;display:grid;place-items:center;color:#0b1220;
   background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 20px rgba(245,166,35,.35)}
 .brand-name{font-family:var(--font-d);font-weight:700;font-size:19px;letter-spacing:-.01em}
 .hd-right{display:flex;align-items:center;gap:14px}
 .hd-link{font-size:14px;color:var(--text-2);font-weight:500}
 .hd-link:hover{color:var(--text)}
-.langsw{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:rgba(10,16,30,.5)}
+.langsw{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:rgba(10,16,30,.5)}
 .langsw button{font-family:var(--font-m);font-size:12px;font-weight:500;padding:6px 9px;color:var(--text-3);background:none;border:0;cursor:pointer;transition:.2s}
 .langsw button:hover{color:var(--text-2)}
 .langsw button.on{background:var(--accent);color:var(--accent-ink)}
 
 /* buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;border-radius:11px;
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;border-radius:3px;
   padding:12px 20px;cursor:pointer;transition:transform .2s var(--ease),background .2s,box-shadow .2s;border:1px solid transparent;font-family:var(--font-b)}
 .btn:hover{transform:translateY(-1px)}
-.btn-sm{padding:8px 15px;font-size:14px;border-radius:9px}
+.btn-sm{padding:8px 15px;font-size:14px;border-radius:3px}
 .btn-lg{padding:15px 26px;font-size:16px}
 .btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-ink);
   box-shadow:0 10px 30px rgba(245,166,35,.28)}
@@ -1020,96 +986,90 @@ const CSS = `
   font-size:11px;letter-spacing:.2em;text-shadow:var(--tshadow);animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
 
-/* sections */
-.sec{position:relative;z-index:1;padding:100px 0}
-.kicker{font-family:var(--font-m);font-size:12px;letter-spacing:.24em;color:var(--accent-2);display:inline-block;margin-bottom:16px}
-.h2{font-size:clamp(28px,4vw,46px);max-width:20ch;margin-bottom:18px}
-.lede{font-size:clamp(16px,1.8vw,19px);color:var(--text-2);max-width:60ch;line-height:1.6;margin:0 0 8px}
+/* sections — editorial, hairline-ruled, sharp */
+.sec{position:relative;z-index:1;padding:104px 0;border-top:1px solid var(--line)}
+.sec:first-of-type{border-top:0}
+.sec-head{max-width:60ch}
+.kicker{font-family:var(--font-m);font-size:12px;letter-spacing:.3em;color:var(--accent-2);display:block;margin-bottom:20px}
+.h2{font-size:clamp(30px,4.6vw,54px);max-width:18ch;margin:0 0 20px;text-transform:uppercase;letter-spacing:-.015em}
+.lede{font-size:clamp(16px,1.7vw,19px);color:var(--text-2);max-width:62ch;line-height:1.6;margin:0}
+
+/* the big outlined index numeral — the body signature */
+.idx{font-family:var(--font-d);font-weight:700;line-height:.8;color:transparent;
+  -webkit-text-stroke:1.2px rgba(245,166,35,.5);font-size:clamp(52px,7vw,90px);letter-spacing:-.02em}
+.idx.sm{font-size:32px;-webkit-text-stroke:1px rgba(245,166,35,.5)}
 
 /* problem */
-.problem .wrap{border-top:1px solid var(--line);padding-top:64px}
-.before-after{margin-top:40px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
-.before{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
-.before li{font-family:var(--font-m);font-size:13px;color:var(--text-3);padding:9px 13px;border:1px dashed var(--line);
-  border-radius:9px;background:rgba(255,255,255,.02);text-decoration:line-through;text-decoration-color:rgba(245,166,35,.5)}
-.ba-arrow{color:var(--accent)}
-.after{display:flex;align-items:center;gap:11px;font-family:var(--font-d);font-weight:700;font-size:clamp(17px,2vw,22px);
-  padding:14px 20px;border:1px solid var(--accent-muted,#7a5a2e);border-radius:12px;
-  background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.02))}
-.after-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 16px var(--accent)}
+.before-after{margin-top:48px;display:grid;grid-template-columns:1fr;gap:30px}
+.before{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0}
+.before li{font-family:var(--font-m);font-size:13px;color:var(--text-3);margin:0 22px 6px 0;
+  text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:1px}
+.after{font-family:var(--font-d);font-weight:700;font-size:clamp(21px,2.8vw,32px);color:var(--text);
+  text-transform:uppercase;letter-spacing:-.01em;max-width:24ch;margin:0;border-left:3px solid var(--accent);padding-left:22px}
 
-/* how / steps */
-.steps{list-style:none;margin:44px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:14px;counter-reset:s}
-.step{position:relative;padding:26px 20px;border:1px solid var(--line);border-radius:16px;background:var(--panel);
-  overflow:hidden}
-.step::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),transparent)}
-.step-n{font-family:var(--font-m);font-size:12px;color:var(--accent-2);letter-spacing:.1em}
-.step-ic{margin:16px 0 14px;width:42px;height:42px;border-radius:11px;display:grid;place-items:center;
-  color:var(--accent-2);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.18)}
-.step-t{font-size:17px;font-weight:700;margin-bottom:8px}
-.step-d{font-size:13.5px;color:var(--text-2);line-height:1.55}
+/* how — numbered rows */
+.steps{list-style:none;margin:56px 0 0;padding:0}
+.step{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:30px;
+  padding:34px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step .idx{grid-row:1/3;align-self:start}
+.step-t{grid-column:2;align-self:center;font-family:var(--font-d);font-weight:700;
+  font-size:clamp(19px,2.2vw,27px);text-transform:uppercase;letter-spacing:-.01em}
+.step-d{grid-column:2;font-size:15px;color:var(--text-2);line-height:1.6;max-width:58ch;margin-top:8px}
 
-/* pillars */
-.pillar-grid{margin-top:44px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.pillar{padding:26px 24px;border:1px solid var(--line);border-radius:18px;background:var(--panel);transition:transform .3s var(--ease),border-color .3s}
-.pillar:hover{transform:translateY(-3px);border-color:rgba(245,166,35,.3)}
-.pillar-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
-.pillar-ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center}
-.tone-amber .pillar-ic{color:var(--accent-2);background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.2)}
-.tone-sky .pillar-ic{color:var(--sky);background:rgba(110,168,255,.12);border:1px solid rgba(110,168,255,.2)}
-.pillar-t{font-size:19px;font-weight:700}
-.pillar-tag{font-size:13.5px;color:var(--text-2);margin-top:4px}
-.pillar-feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
-.pillar-feats li{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center}
-.pf-ic{grid-row:1/3;color:var(--accent-2);opacity:.85}
-.tone-sky .pf-ic{color:var(--sky)}
-.pf-name{font-size:14px;font-weight:600}
-.pf-desc{grid-column:2;font-size:12.5px;color:var(--text-3);line-height:1.4}
+/* pillars — capability index */
+.pillar-grid{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.pillar{padding:30px 26px;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
+.pillar:nth-child(3n+1){border-left:0;padding-left:0}
+.pillar-head{margin-bottom:18px}
+.pillar-head .idx{display:block;margin-bottom:10px}
+.pillar-t{font-family:var(--font-d);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:-.01em}
+.pillar-tag{font-size:13.5px;color:var(--text-2);margin-top:6px}
+.pillar-feats{list-style:none;margin:0;padding:0}
+.pillar-feats li{padding:11px 0;border-top:1px solid var(--line)}
+.pf-name{display:block;font-size:14px;font-weight:600;color:var(--text)}
+.pf-desc{display:block;font-size:12.5px;color:var(--text-3);line-height:1.45;margin-top:2px}
 
-.all-mods{margin-top:40px;border-top:1px solid var(--line);padding-top:30px}
-.all-title{font-size:15px;font-family:var(--font-m);letter-spacing:.06em;color:var(--text-2);margin-bottom:16px;text-align:center}
-.mod-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.mod-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);
-  padding:7px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02)}
-.mod-chip svg{color:var(--accent-2);opacity:.8}
+.all-mods{margin-top:52px;border-top:1px solid var(--line);padding-top:28px;
+  display:grid;grid-template-columns:190px 1fr;gap:26px}
+.all-title{font-family:var(--font-m);font-size:12px;letter-spacing:.22em;color:var(--accent-2);text-transform:uppercase}
+.mod-line{font-size:13.5px;color:var(--text-3);line-height:1.95;margin:0}
 
-/* roles */
-.role-grid{margin-top:40px;display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-.role{padding:24px 18px;border:1px solid var(--line);border-radius:16px;background:var(--panel);text-align:center;transition:transform .3s var(--ease)}
-.role:hover{transform:translateY(-3px)}
-.role-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;margin:0 auto 14px;
-  color:var(--accent-2);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.18)}
-.role-t{font-size:16px;font-weight:700;margin-bottom:8px}
+/* roles — masthead columns */
+.role-grid{margin-top:56px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line)}
+.role{padding:28px 20px;border-left:1px solid var(--line)}
+.role:first-child{border-left:0;padding-left:0}
+.role .idx{display:block;margin-bottom:14px}
+.role-t{font-family:var(--font-d);font-weight:700;font-size:17px;text-transform:uppercase;margin-bottom:9px}
 .role-d{font-size:12.5px;color:var(--text-3);line-height:1.5}
 
-/* diff */
-.diff-grid{margin-top:44px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-.diffcard{padding:30px 28px;border:1px solid var(--line);border-radius:18px;background:var(--panel);position:relative;overflow:hidden}
-.diff-hero{grid-column:1/-1;background:linear-gradient(135deg,rgba(245,166,35,.08),var(--panel))}
-.diff-ic{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;margin-bottom:18px;
-  color:var(--accent-ink);background:linear-gradient(135deg,var(--accent),var(--accent-2))}
-.diff-t{font-size:21px;font-weight:700;margin-bottom:10px}
-.diff-d{font-size:15px;color:var(--text-2);line-height:1.6;max-width:56ch}
-.lang-flags{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;font-size:24px}
+/* diff — numbered claims */
+.diff-list{margin-top:56px;border-top:1px solid var(--line)}
+.diffrow{display:grid;grid-template-columns:auto 1fr;gap:34px;padding:40px 0;border-bottom:1px solid var(--line);align-items:start}
+.diff-body{max-width:60ch}
+.diff-t{font-family:var(--font-d);font-weight:700;font-size:clamp(20px,2.4vw,29px);text-transform:uppercase;letter-spacing:-.01em;margin-bottom:12px}
+.diff-d{font-size:15px;color:var(--text-2);line-height:1.6}
+.lang-flags{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap;font-size:26px}
 
-/* faq */
-.faq-list{margin-top:40px;display:flex;flex-direction:column;gap:12px;max-width:820px}
-.faq-item{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
-.faq-item summary{list-style:none;cursor:pointer;padding:20px 22px;font-family:var(--font-d);font-weight:700;font-size:17px;
-  display:flex;justify-content:space-between;align-items:center;gap:16px}
+/* faq — hairline rows */
+.faq-list{margin-top:48px;border-top:1px solid var(--line)}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-item summary{list-style:none;cursor:pointer;padding:24px 0;font-family:var(--font-d);font-weight:600;
+  font-size:clamp(17px,2vw,21px);text-transform:uppercase;letter-spacing:-.005em;
+  display:flex;justify-content:space-between;align-items:center;gap:18px}
 .faq-item summary::-webkit-details-marker{display:none}
 .faq-chev{color:var(--accent-2);transition:transform .3s var(--ease);flex:none}
 .faq-item[open] .faq-chev{transform:rotate(180deg)}
-.faq-item p{margin:0;padding:0 22px 22px;color:var(--text-2);font-size:14.5px;line-height:1.6;max-width:64ch}
+.faq-item p{margin:0;padding:2px 0 26px;color:var(--text-2);font-size:15px;line-height:1.65;max-width:70ch}
 
-/* cta */
-.cta-card{position:relative;overflow:hidden;border-radius:26px;padding:70px 40px;text-align:center;
-  border:1px solid rgba(245,166,35,.24);background:linear-gradient(135deg,rgba(245,166,35,.12),rgba(13,21,38,.6))}
-.cta-glow{position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(600px 300px at 50% -20%,rgba(245,166,35,.3),transparent 70%)}
-.cta-title{position:relative;font-size:clamp(26px,4vw,44px);max-width:20ch;margin:0 auto 16px}
-.cta-sub{position:relative;color:var(--text-2);font-size:17px;max-width:52ch;margin:0 auto 30px;line-height:1.6}
-.cta-card .btn{position:relative}
+/* cta — flat band over the ending frame */
+.cta-sec{padding:0;border-top:0}
+.cta-band{position:relative;background-size:cover;background-position:center 30%;padding:110px 0;overflow:hidden}
+.cta-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,12,24,.74),rgba(8,12,24,.9))}
+.cta-inner{position:relative}
+.cta-title{font-family:var(--font-d);font-weight:700;font-size:clamp(30px,5vw,62px);text-transform:uppercase;
+  letter-spacing:-.015em;max-width:16ch;margin:0 0 18px;text-shadow:var(--tshadow)}
+.cta-sub{color:var(--text-2);font-size:17px;max-width:50ch;margin:0 0 34px;line-height:1.6;text-shadow:var(--tshadow)}
 
 /* footer */
 .ft{position:relative;z-index:1;border-top:1px solid var(--line);padding:36px 0}
@@ -1119,24 +1079,27 @@ const CSS = `
 .ft-by:hover{color:var(--accent-2)}
 
 /* reveal */
-.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .reveal.in{opacity:1;transform:none}
 
 /* responsive */
 @media(max-width:1024px){
-  .steps,.role-grid{grid-template-columns:repeat(2,1fr)}
   .pillar-grid{grid-template-columns:repeat(2,1fr)}
-  .diff-grid{grid-template-columns:1fr}
+  .pillar:nth-child(3n+1){border-left:1px solid var(--line);padding-left:26px}
+  .pillar:nth-child(2n+1){border-left:0;padding-left:0}
+  .role-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:820px){
   .hero-wrap{height:320vh}
   .rail{right:18px;height:38vh}
   .hd-link{display:none}
-  .sec{padding:70px 0}
-  .steps{grid-template-columns:1fr}
+  .sec{padding:66px 0}
+  .step{column-gap:20px}
+  .step .idx{font-size:42px}
   .pillar-grid,.role-grid{grid-template-columns:1fr}
-  .before-after{flex-direction:column;align-items:flex-start}
-  .ba-arrow{transform:rotate(90deg)}
+  .pillar,.role{border-left:0!important;padding-left:0!important}
+  .diffrow{grid-template-columns:1fr;gap:14px}
+  .all-mods{grid-template-columns:1fr;gap:14px}
 }
 @media(pointer:coarse){.btn{min-height:44px}}
 @media(prefers-reduced-motion:reduce){
