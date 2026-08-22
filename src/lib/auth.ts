@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { checkRateLimit, resetRateLimit } from "./rate-limit";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -13,8 +14,17 @@ export const authOptions: NextAuthOptions = {
         email: { label: "E-posta", type: "email" },
         password: { label: "Şifre", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // Brute-force koruması: IP başına dakikada 8 deneme
+        const headers = (req?.headers ?? {}) as Record<string, string | undefined>;
+        const xff = headers["x-forwarded-for"] || "";
+        const ip = xff.split(",")[0].trim() || headers["x-real-ip"] || "unknown";
+        const rlKey = `web-login:${ip}`;
+        if (!checkRateLimit(rlKey, 8, 60_000).allowed) {
+          throw new Error("Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.");
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
@@ -24,6 +34,8 @@ export const authOptions: NextAuthOptions = {
 
         const valid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!valid) return null;
+
+        resetRateLimit(rlKey); // başarılı giriş: sayacı temizle
 
         return {
           id: user.id,

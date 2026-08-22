@@ -12,8 +12,8 @@ export async function GET(
 
   const { id } = await params;
 
-  const anket = await prisma.anket.findUnique({
-    where: { id },
+  const anket = await prisma.anket.findFirst({
+    where: { id, buildingId: session.user.buildingId! },
     include: {
       sorular: {
         orderBy: { sira: "asc" },
@@ -50,7 +50,7 @@ export async function PUT(
   const body = await req.json();
   const { baslik, aciklama, durum, bitisTarihi, anonim } = body;
 
-  const existing = await prisma.anket.findUnique({ where: { id } });
+  const existing = await prisma.anket.findFirst({ where: { id, buildingId: session.user.buildingId! } });
   if (!existing) {
     return NextResponse.json({ error: "Anket bulunamadi" }, { status: 404 });
   }
@@ -85,7 +85,7 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const existing = await prisma.anket.findUnique({ where: { id } });
+  const existing = await prisma.anket.findFirst({ where: { id, buildingId: session.user.buildingId! } });
   if (!existing) {
     return NextResponse.json({ error: "Anket bulunamadi" }, { status: 404 });
   }

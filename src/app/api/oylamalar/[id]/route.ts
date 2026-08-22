@@ -12,8 +12,8 @@ export async function GET(
 
   const { id } = await params;
 
-  const oylama = await prisma.poll.findUnique({
-    where: { id },
+  const oylama = await prisma.poll.findFirst({
+    where: { id, buildingId: session.user.buildingId! },
     include: {
       votes: {
         include: {
@@ -45,7 +45,10 @@ export async function POST(
     return NextResponse.json({ error: "Geçerli bir seçenek belirtin" }, { status: 400 });
   }
 
-  const poll = await prisma.poll.findUnique({ where: { id } });
+  // Tenant isolation: oylama kullanıcının binasına ait olmalı
+  const poll = await prisma.poll.findFirst({
+    where: { id, buildingId: session.user.buildingId! },
+  });
   if (!poll) {
     return NextResponse.json({ error: "Oylama bulunamadı" }, { status: 404 });
   }

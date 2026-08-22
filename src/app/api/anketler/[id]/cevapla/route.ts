@@ -18,8 +18,8 @@ export async function POST(
     return NextResponse.json({ error: "Cevaplar zorunludur" }, { status: 400 });
   }
 
-  const anket = await prisma.anket.findUnique({
-    where: { id },
+  const anket = await prisma.anket.findFirst({
+    where: { id, buildingId: session.user.buildingId! },
     include: { sorular: true },
   });
 

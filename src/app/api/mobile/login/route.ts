@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, resetRateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = clientIp(req.headers);
+  const rlKey = `mobile-login:${ip}`;
+  const rl = checkRateLimit(rlKey, 5, 60_000); // 5 deneme / dakika
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Çok fazla deneme. Lütfen biraz sonra tekrar deneyin." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    );
+  }
+
   const { email, password } = await req.json();
 
   if (!email || !password) {
@@ -19,6 +30,8 @@ export async function POST(req: NextRequest) {
   if (!valid) {
     return NextResponse.json({ error: "E-posta veya şifre hatalı" }, { status: 401 });
   }
+
+  resetRateLimit(rlKey); // başarılı giriş: sayacı temizle
 
   const token = jwt.sign(
     {

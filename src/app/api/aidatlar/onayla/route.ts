@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ödeme bulunamadı" }, { status: 404 });
   }
 
+  // Tenant isolation: ödeme yöneticinin binasına ait olmalı
+  if (payment.duesItem.dues.buildingId !== session.user.buildingId) {
+    return NextResponse.json({ error: "Ödeme bulunamadı" }, { status: 404 });
+  }
+
   await prisma.$transaction(async (tx) => {
     // 1. Update the payment's approval status
     await tx.payment.update({

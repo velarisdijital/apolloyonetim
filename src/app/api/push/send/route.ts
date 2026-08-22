@@ -18,7 +18,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Başlık ve mesaj gerekli" }, { status: 400 });
   }
 
-  const where: { userId?: { in: string[] } } = {};
+  // Tenant isolation: yalnızca yöneticinin binasındaki kullanıcılara push
+  const where: { user: { buildingId: string | null }; userId?: { in: string[] } } = {
+    user: { buildingId: session.user.buildingId ?? null },
+  };
   if (userIds?.length) {
     where.userId = { in: userIds };
   }
