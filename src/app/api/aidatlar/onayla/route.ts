@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -94,8 +95,9 @@ export async function POST(req: NextRequest) {
     }
   });
 
-  await prisma.notification.create({
-    data: {
+  await notifyUser(
+    payment.userId,
+    {
       baslik: onayDurumu === "ONAYLANDI" ? "Ödeme Onaylandı" : "Ödeme Reddedildi",
       mesaj:
         onayDurumu === "ONAYLANDI"
@@ -103,9 +105,9 @@ export async function POST(req: NextRequest) {
           : `${payment.duesItem.dues.ay}/${payment.duesItem.dues.yil} aidatınız reddedildi.${onayNotu ? ` Not: ${onayNotu}` : ""}`,
       tip: "odeme",
       link: "/aidatlar",
-      userId: payment.userId,
     },
-  });
+    { email: true }
+  );
 
   return NextResponse.json({ success: true });
 }
