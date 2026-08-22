@@ -1,4 +1,3 @@
-import { prisma } from "./prisma";
 import nodemailer, { type Transporter } from "nodemailer";
 
 // Birleşik bildirim katmanı: uygulama-içi + SMS (NetGSM) + e-posta (SMTP).
@@ -81,6 +80,7 @@ export async function notifyUser(
   data: NotifyData,
   channels: { sms?: boolean; email?: boolean } = {}
 ): Promise<void> {
+  const { prisma } = await import("./prisma");
   await prisma.notification.create({ data: { ...data, userId } });
   if (!channels.sms && !channels.email) return;
   const user = await prisma.user.findUnique({
